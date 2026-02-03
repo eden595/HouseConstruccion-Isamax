@@ -1,0 +1,219 @@
+﻿{% load static i18n %}
+
+<!-- Begin Header -->
+<header class="app-header" id="appHeader" style="background-color: #ff6802;">
+    <div class="container-fluid w-100">
+        <div class="d-flex justify-content-between align-items-center">
+            <!-- =================== IZQUIERDA =================== -->
+            <div class="d-inline-flex align-items-center gap-2">
+
+                <!-- Logo solo en mobile/tablet -->
+                <a href="{% url 'home' %}" class="d-inline-flex align-items-center d-xl-none text-decoration-none ms-1">
+                    <img src="{% static 'assets/images/logo-md.png' %}" alt="House Construccion" height="32">
+                </a>
+                <button type="button" class="vertical-toggle btn header-btn d-xl-none" id="toggleSidebar" aria-label="{% trans 'Toggle Sidebar' %}">
+                    <i class="bi bi-arrow-bar-left header-icon"></i>
+                </button>
+                <button type="button" class="horizontal-toggle btn header-btn d-none" id="toggleHorizontal" aria-label="{% trans 'Toggle Menu' %}">
+                    <i class="ri-menu-2-line header-icon"></i>
+                </button>
+            </div>
+
+            <!-- =================== DERECHA =================== -->
+            <div class="flex-shrink-0 d-flex align-items-center gap-4">
+                <!-- modo claro / oscuro (inline en desktop) -->
+                <div class="dark-mode-btn d-none d-md-flex" id="toggleMode" aria-label="{% trans 'Toggle theme' %}">
+                    <button class="btn header-btn active" id="lightModeBtn" type="button" aria-label="{% trans 'Switch to light mode' %}">
+                        <i class="bi bi-brightness-high"></i>
+                    </button>
+                    <button class="btn header-btn" id="darkModeBtn" type="button" aria-label="{% trans 'Switch to Dark mode' %}">
+                        <i class="bi bi-moon-stars"></i>
+                    </button>
+                </div>
+
+                <!-- =================== PERFIL DE USUARIO =================== -->
+                <div class="dropdown pe-dropdown-mega">
+                    <button class="header-profile-btn btn gap-2 align-items-center text-start" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <div class="d-none d-xl-block pe-1">
+                            <span class="profile-name d-block mb-0">
+                                {% if request.user.is_authenticated %}
+                                    {{ request.user.first_name|default:request.user.username }}
+                                {% else %}
+                                    {% trans "Invitado" %}
+                                {% endif %}
+                            </span>
+                        </div>
+                        <span class="header-avatar">
+                            {% if request.user.is_authenticated and request.user.profile.image %}
+                                <img src="{{ request.user.profile.image.url }}" alt="{% trans 'Avatar Image' %}" class="header-avatar-img rounded-circle" width="34" height="34" style="border-radius:50% !important; object-fit:cover; clip-path: circle(50%);">
+                            {% else %}
+                                <img src="{% static 'assets/images/avatar/avatar-3.jpg' %}" alt="{% trans 'Avatar Image' %}" class="header-avatar-img rounded-circle" width="34" height="34" style="border-radius:50% !important; object-fit:cover; clip-path: circle(50%);">
+                            {% endif %}
+                        </span>
+                    </button>
+
+                    <!-- Dropdown -->
+                    <div class="dropdown-menu dropdown-mega-sm header-dropdown-menu p-3 profile-dropdown">
+                        <!-- Toggle tema solo en mobile -->
+                        <div class="mb-3 d-flex d-md-none">
+                            <div class="w-100">
+                                <div class="small text-muted mb-1">{% trans "Tema" %}</div>
+                                <div class="dark-mode-btn" id="toggleModeMobile" aria-label="{% trans 'Toggle theme' %}">
+                                    <button class="btn header-btn active" id="lightModeBtnMobile" type="button" aria-label="{% trans 'Switch to light mode' %}">
+                                        <i class="bi bi-brightness-high"></i>
+                                    </button>
+                                    <button class="btn header-btn" id="darkModeBtnMobile" type="button" aria-label="{% trans 'Switch to Dark mode' %}">
+                                        <i class="bi bi-moon-stars"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- seccion principal: tus opciones -->
+                        <ul class="list-unstyled mb-1 border-bottom pb-1">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'profile' %}">
+                                    <i class="bi bi-person me-2"></i> Ver perfil
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'change_password' %}">
+                                    <i class="bi bi-key me-2"></i> Gestionar contraseña
+                                </a>
+                            </li>
+                        </ul>
+
+                        <!-- login / logout -->
+                        <ul class="list-unstyled mb-0">
+                            {% if request.user.is_authenticated %}
+                                <li>
+                                    <a class="dropdown-item text-danger" href="{% url 'signout' %}">
+                                        <i class="bi bi-box-arrow-right me-2"></i> Cerrar sesión
+                                    </a>
+                                </li>
+                            {% else %}
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'signin' %}">
+                                        <i class="bi bi-box-arrow-in-right me-2"></i> Iniciar sesión
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+<!-- END Header -->
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const htmlEl = document.documentElement;
+    const STORAGE_KEY = 'data-bs-theme';
+    const bodyEl = document.body;
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.getElementById('toggleSidebar');
+    const sidebarTitle = document.querySelector('.sidebar-title');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    const mobileLogo = document.getElementById('mobileLogo');
+
+    const inlineLight = document.getElementById('lightModeBtn');
+    const inlineDark = document.getElementById('darkModeBtn');
+    const mobileLight = document.getElementById('lightModeBtnMobile');
+    const mobileDark = document.getElementById('darkModeBtnMobile');
+
+    function applyState(theme) {
+        htmlEl.setAttribute('data-bs-theme', theme);
+        localStorage.setItem(STORAGE_KEY, theme);
+        const isDark = theme === 'dark';
+        [inlineLight, mobileLight].forEach(btn => btn?.classList.toggle('active', !isDark));
+        [inlineDark, mobileDark].forEach(btn => btn?.classList.toggle('active', isDark));
+    }
+
+    function toggleTheme() {
+        const next = htmlEl.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
+        applyState(next);
+    }
+
+    // Sidebar helpers: desktop siempre abierto, mobile/tablet colapsable
+    function openSidebar() {
+        bodyEl.classList.add('sidebar-open');
+        sidebar?.classList.add('show', 'sidebar-expanded');
+        if (sidebarTitle) sidebarTitle.classList.add('sidebar-title-open');
+        mobileLogo?.classList.add('d-none');
+    }
+    function closeSidebar() {
+        bodyEl.classList.remove('sidebar-open');
+        sidebar?.classList.remove('show', 'sidebar-expanded');
+        if (sidebarTitle) sidebarTitle.classList.remove('sidebar-title-open');
+        mobileLogo?.classList.remove('d-none');
+    }
+    function toggleSidebarState() {
+        if (bodyEl.classList.contains('sidebar-open')) {
+            closeSidebar();
+        } else {
+            openSidebar();
+        }
+    }
+
+    [
+        {btn: inlineLight, theme: 'light'},
+        {btn: mobileLight, theme: 'light'},
+        {btn: inlineDark, theme: 'dark'},
+        {btn: mobileDark, theme: 'dark'},
+    ].forEach(({btn, theme}) => {
+        btn?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            applyState(theme);
+        });
+    });
+
+    const saved = localStorage.getItem(STORAGE_KEY);
+    const attrTheme = htmlEl.getAttribute('data-bs-theme');
+    const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const initial = (saved === 'light' || saved === 'dark')
+        ? saved
+        : (attrTheme === 'light' || attrTheme === 'dark')
+            ? attrTheme
+            : (systemPrefersDark ? 'dark' : 'light');
+    applyState(initial);
+
+    const mqDesktop = window.matchMedia('(min-width: 1200px)');
+    function syncSidebar() {
+        if (mqDesktop.matches) {
+            openSidebar();
+        } else {
+            closeSidebar();
+        }
+    }
+    mqDesktop.addEventListener('change', syncSidebar);
+    syncSidebar();
+
+    sidebarToggle?.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (mqDesktop.matches) {
+            openSidebar();
+        } else {
+            toggleSidebarState();
+        }
+    });
+
+    sidebarOverlay?.addEventListener('click', () => {
+        if (!mqDesktop.matches) {
+            closeSidebar();
+        }
+    });
+
+    // Cerrar al tocar fuera del sidebar en móvil/tablet
+    document.addEventListener('click', (event) => {
+        if (mqDesktop.matches) return;
+        if (!bodyEl.classList.contains('sidebar-open')) return;
+        const isInsideSidebar = sidebar?.contains(event.target);
+        const isToggle = sidebarToggle?.contains(event.target);
+        if (!isInsideSidebar && !isToggle) {
+            closeSidebar();
+        }
+    });
+});
+</script>

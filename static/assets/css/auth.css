@@ -1,0 +1,186 @@
+/* ===========================
+      TOP BAR (WEB ORIGINAL)
+   =========================== */
+.topbar-house {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    background: #03285C;
+    display: flex;
+    align-items: center;
+    padding: 0 40px;
+    color: #ffffff;
+    font-size: 22px;
+    z-index: 1000;
+    overflow: hidden;
+}
+
+/* Diagonal pequeña y exacta como la web */
+.topbar-house::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 260px;
+    /* mueve la diagonal más a la derecha */
+    width: 90px;
+    /* diagonal más corta (web real) */
+    height: 100%;
+    background: #FF6A00;
+    clip-path: polygon(0 0, 100% 0, 70% 100%, 0% 100%);
+    z-index: 1;
+}
+
+/* RECTÁNGULO NARANJO DEL TELÉFONO */
+.topbar-phone {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 60px;
+    background: #FF6A00;
+    display: flex;
+    align-items: center;
+    padding: 0 40px;
+    font-weight: 700;
+    font-size: 22px;
+    color: white;
+    gap: 10px;
+    z-index: 2;
+
+    /* DIAGONAL CORRECTA (imagen 2) */
+    clip-path: polygon(12% 0, 100% 0, 100% 100%, 0% 100%);
+}
+
+/* ===========================
+       REDES SOCIALES
+   =========================== */
+.topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    z-index: 3;
+}
+
+.topbar-social {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+}
+
+.topbar-social i {
+    color: #ffffff !important;
+    font-size: 24px;
+}
+
+.topbar-social a {
+    background: none !important;
+    padding: 0;
+    border: none;
+}
+
+/* SVG blanco */
+.topbar-social svg,
+.topbar-social svg path {
+    fill: #ffffff !important;
+}
+
+/* Hover */
+.topbar-social a:hover i {
+    color: #dce8ff !important;
+}
+
+/* ===========================
+       HEADER NARANJO LOGIN
+   =========================== */
+
+/* CONTENEDOR PRINCIPAL */
+.header-house {
+    position: fixed;
+    top: 60px;
+    /* Debajo de la barra azul */
+    left: 0;
+    width: 100%;
+    height: 110px;
+    display: flex;
+    align-items: center;
+    padding-left: 40px;
+    background: transparent;
+    z-index: 900;
+}
+
+/* Bloque naranjo con diagonal */
+.header-house::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 35%;
+    height: 100%;
+    background: #FF6A00;
+    clip-path: polygon(0 0, 100% 0, 80% 100%, 0% 100%);
+    z-index: 0;
+}
+
+/* Contenido encima */
+.header-house-inner {
+    position: relative;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+}
+
+.header-house-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1;
+    margin-left: 12px;
+}
+
+/* Logo */
+.header-logo {
+    width: 100px;
+    height: 100px;
+}
+
+/* ===========================
+   ESPACIADO PARA FORMULARIO AUTH
+   =========================== */
+.auth-wrapper {
+    padding-top: 190px;
+    padding-bottom: 0;
+    /* Flexbox sticky footer setup */
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Corrección alineación footer login */
+.footer-login {
+    /* Remove fixed positioning */
+    position: relative !important;
+    width: 100% !important;
+    text-align: center !important;
+    z-index: 1000 !important;
+    background: transparent !important;
+    
+    /* Push to bottom via flexbox */
+    margin-top: auto !important;
+    margin-bottom: 0 !important;
+    margin-left: 0 !important; 
+    margin-right: 0 !important;
+}
+
+
+
+.auth-card {
+    background-color: #f8f9fa !important;
+    border: none !important;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.4) !important;
+}
+
+[data-bs-theme="dark"] .auth-card {
+    background-color: #2d3142 !important;
+    box-shadow: none !important;
+    border: none !important;
+}

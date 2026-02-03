@@ -1,0 +1,153 @@
+{% extends "partials/layouts/main.html" %}
+{% load static %}
+
+{% include "partials/main.html" %}
+
+{% block meta %}
+{% with title="Nuevo Usuario" %}
+{% include "partials/title-meta.html" %}
+{% endwith %}
+{% endblock %}
+
+{% block content %}
+{% with title_sub="Administrador" title="Crear usuario" breadcrumb_parent="Usuarios" %}
+{% include "partials/pagetitle.html" %}
+{% endwith %}
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" class="compact-inputs" id="form-crear-usuario">
+            {% csrf_token %}
+
+            <div class="row g-3 align-items-end">
+                <div class="col-12 col-md-4">
+                    <label class="form-label">Usuario <span class="text-danger">*</span></label>
+                    <input type="text" name="username" class="form-control form-control-sm" placeholder="Ingresa un nombre de usuario" value="{{ username_val|default:'' }}" required>
+                </div>
+                <div class="col-12 col-md-4">
+                    <label class="form-label">Correo electr&oacute;nico<span class="text-danger">*</span></label>
+                    <input type="email" name="email" class="form-control form-control-sm" placeholder="Ingresa tu correo" value="{{ email_val|default:'' }}" required>
+                </div>
+                <div class="col-12 col-md-4">
+                    <label class="form-label">Rol<span class="text-danger">*</span></label>
+                    <select name="group_id" class="form-select form-select-sm" required>
+                        <option value="">Selecciona un rol</option>
+                        {% for g in grupos %}
+                            <option value="{{ g.id }}" {% if group_selected == g.id|stringformat:"s" %}selected{% endif %}>{{ g.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="row g-3 align-items-end mt-2">
+                <div class="col-12 col-md-4">
+                    <label class="form-label">Fecha creaci&oacute;n</label>
+                    <input type="date" name="fecha_creacion" class="form-control form-control-sm" readonly>
+                </div>
+                <div class="col-12 col-md-4">
+                    <label class="form-label">Contrase&ntilde;a<span class="text-danger">*</span></label>
+                    <div class="input-group input-group-sm">
+                        <input type="password" name="password" class="form-control form-control-sm no-reveal" id="pass1" placeholder="Ingresa una contrase&ntilde;a" required>
+                        <button class="btn btn-outline-secondary btn-sm" type="button" tabindex="-1" onclick="togglePass('pass1', this)" aria-label="Mostrar contrase&ntilde;a">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <label class="form-label">Confirmar contrase&ntilde;a<span class="text-danger">*</span></label>
+                    <div class="input-group input-group-sm">
+                        <input type="password" name="password2" class="form-control form-control-sm no-reveal" id="pass2" placeholder="Repite tu contrase&ntilde;a" required>
+                        <button class="btn btn-outline-secondary btn-sm" type="button" tabindex="-1" onclick="togglePass('pass2', this)" aria-label="Mostrar contrase&ntilde;a">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3 mt-3">
+                <div class="col-12 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary px-4">Guardar</button>
+                    <a href="{% url 'admin_users' %}" id="cancelar-crear-usuario" class="btn btn-outline-secondary px-4">Cancelar</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('form-crear-usuario');
+  if (!form) return;
+
+  const fechaInput = form.querySelector('input[name="fecha_creacion"]');
+  if (fechaInput && !fechaInput.value) {
+    fechaInput.value = new Date().toISOString().slice(0, 10);
+  }
+
+  form.addEventListener('submit', (e) => {
+    const username = form.querySelector('input[name="username"]')?.value.trim() || '';
+    const email = form.querySelector('input[name="email"]')?.value.trim() || '';
+    const role = form.querySelector('select[name="group_id"]')?.value || '';
+    const pass1 = form.querySelector('input[name="password"]')?.value || '';
+    const pass2 = form.querySelector('input[name="password2"]')?.value || '';
+
+    let message = '';
+    if (!username || !email || !role || !pass1 || !pass2) {
+      message = 'Todos los campos son obligatorios (usuario, correo, rol y contraseñas).';
+    } else if (pass1 !== pass2) {
+      message = 'Las contraseñas no coinciden.';
+    }
+
+    if (message) {
+      e.preventDefault();
+      Swal.fire({
+        icon: 'warning',
+        title: 'No se puede guardar',
+        text: message,
+        confirmButtonText: 'Entendido'
+      });
+    }
+  });
+
+  {% if errors %}
+    Swal.fire({
+      icon: 'warning',
+      title: 'No se puede guardar',
+      html: '<ul style="text-align:left;">{% for err in errors %}<li>{{ err }}</li>{% endfor %}</ul>',
+      confirmButtonText: 'Entendido'
+    });
+  {% endif %}
+
+  const cancelBtn = document.getElementById('cancelar-crear-usuario');
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      Swal.fire({
+        icon: 'question',
+        title: '¿Seguro que no quieres crear un Usuario?',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, salir',
+        cancelButtonText: 'Seguir aquí'
+      }).then(res => {
+        if (res.isConfirmed) window.location.href = cancelBtn.href;
+      });
+    });
+  }
+});
+
+function togglePass(id, btn) {
+  const input = document.getElementById(id);
+  if (!input) return;
+  const isPass = input.type === 'password';
+  input.type = isPass ? 'text' : 'password';
+  if (btn && btn.querySelector('i')) {
+    btn.querySelector('i').className = isPass ? 'bi bi-eye-slash' : 'bi bi-eye';
+  }
+  if (btn) btn.setAttribute('aria-label', isPass ? 'Ocultar contraseña' : 'Mostrar contraseña');
+}
+</script>
+{% endblock %}

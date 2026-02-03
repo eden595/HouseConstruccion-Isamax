@@ -1,0 +1,7 @@
+{% if usuario.is_active %}
+    <span class="badge bg-success status-badge">Activo</span>
+    <button type="submit" class="btn btn-sm btn-outline-danger toggle-btn">Desactivar</button>
+{% else %}
+    <span class="badge bg-secondary status-badge">Inactivo</span>
+    <button type="submit" class="btn btn-sm btn-outline-success toggle-btn">Activar</button>
+{% endif %}

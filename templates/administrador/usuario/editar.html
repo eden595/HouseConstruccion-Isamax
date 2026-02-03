@@ -1,0 +1,179 @@
+{% extends "partials/layouts/main.html" %}
+{% load static %}
+
+{% include "partials/main.html" %}
+
+{% block meta %}
+{% with title="Editar Usuario" %}
+{% include "partials/title-meta.html" %}
+{% endwith %}
+{% endblock %}
+
+{% block content %}
+{% with title_sub="Administrador" title="Editar usuario"%}
+{% include "partials/pagetitle.html" %}
+{% endwith %}
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" id="user-edit-form" class="compact-inputs">
+            {% csrf_token %}
+            <div class="row g-3 align-items-end">
+                <div class="col-md-6 col-lg-3 shrink-col">
+                    <label class="form-label">Usuario <span class="text-danger">*</span></label>
+                    <input
+                        type="text"
+                        name="username"
+                        class="form-control form-control-sm"
+                        value="{{ usuario.username }}"
+                        required
+                        readonly
+                        aria-readonly="true"
+                    >
+                </div>
+                <div class="col-md-6 col-lg-3 shrink-col">
+                    <label class="form-label">Correo <span class="text-danger">*</span></label>
+                    <input
+                        type="email"
+                        name="email"
+                        class="form-control form-control-sm"
+                        value="{{ usuario.email }}"
+                        required
+                        readonly
+                        aria-readonly="true"
+                    >
+                </div>
+                <div class="col-md-6 col-lg-3 shrink-col">
+                    <label class="form-label">Nombres</label>
+                    <input type="text" name="first_name" class="form-control form-control-sm"
+                        value="{{ usuario.first_name }}">
+                </div>
+                <div class="col-md-6 col-lg-3 shrink-col">
+                    <label class="form-label">Apellidos</label>
+                    <input type="text" name="last_name" class="form-control form-control-sm"
+                        value="{{ usuario.last_name }}">
+                </div>
+                <div class="col-md-6 col-lg-3 shrink-col">
+                    <label class="form-label">Rol <span class="text-danger">*</span></label>
+                    <select class="form-select form-select-sm" name="group_id" required>
+                        <option value="">Selecciona un rol</option>
+                        {% for g in grupos %}
+                        <option value="{{ g.id }}" {% if grupo_actual and grupo_actual.id == g.id %}selected{% endif %}>{{ g.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6 col-lg-3 shrink-col">
+                    <label class="form-label">Fecha creación</label>
+                    <input type="date" name="fecha_creacion" class="form-control form-control-sm"
+                        value="{{ usuario.date_joined|date:'Y-m-d' }}" readonly>
+                </div>
+            </div>
+            <div class="d-flex gap-2 mt-3">
+                <button type="submit" class="btn btn-primary px-4">Guardar cambios</button>
+                <a href="{% url 'admin_users' %}" class="btn btn-outline-secondary px-4" id="user-cancel">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    // Mensajes Django centrados
+    const djangoMessages = [
+        {% for message in messages %}
+    { level: '{{ message.tags|default:"info" }}', text: '{{ message|escapejs }}' } {% if not forloop.last %}, {% endif %}
+    {% endfor %}
+];
+    if (typeof Swal !== 'undefined' && djangoMessages.length) {
+        const last = djangoMessages[djangoMessages.length - 1];
+        const lvl = (last.level || '').toLowerCase();
+        const icon = lvl.includes('success') ? 'success' : lvl.includes('error') ? 'error' : lvl.includes('warning') ? 'warning' : 'info';
+        const defaultText = lvl.includes('info') ? 'No modificaste ningún dato.' : undefined;
+        let title = last.text || 'Información';
+        if (lvl.includes('success')) {
+            title = 'Usuario ha sido actualizado correctamente.';
+        }
+        Swal.fire({
+            icon,
+            title,
+            text: defaultText,
+            position: 'center',
+            toast: false,
+            showConfirmButton: false,
+            timer: 1800
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.getElementById('user-edit-form');
+        if (!form) return;
+
+        // Modal "sin cambios" cuando el backend marca no_changes
+        const noChanges = "{{ no_changes|yesno:'true,false' }}" === "true";
+        if (noChanges && typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'info',
+                title: 'No se realizaron cambios.',
+                text: 'No modificaste ningún dato.',
+                position: 'center',
+                toast: false,
+                showConfirmButton: false,
+                timer: 1800
+            }).then(() => {
+                window.location.href = "{% url 'admin_users' %}";
+            });
+        }
+
+        const userId = "{{ usuario.id }}";
+        const dateInput = form.querySelector('[name="fecha_creacion"]');
+        const toISO = (val) => {
+            if (!val) return "";
+            if (/^\\d{4}-\\d{2}-\\d{2}$/.test(val)) return val;
+            const parts = String(val).split(/[\\/\\-]/);
+            if (parts.length === 3) {
+                const [d, m, y] = parts.map(Number);
+                if (y && m && d) {
+                    if (String(parts[0]).length === 2 && String(parts[2]).length === 4) {
+                        return `${y.toString().padStart(4, "0")}-${m.toString().padStart(2, "0")}-${d.toString().padStart(2, "0")}`;
+                    }
+                }
+            }
+            return "";
+        };
+
+        let store = {};
+        try { store = JSON.parse(localStorage.getItem('hc_users_dates') || '{}') || {}; } catch (e) { }
+        const serverDateIso = toISO("{{ usuario.date_joined|date:'Y-m-d' }}") || "{{ usuario.date_joined|date:'Y-m-d' }}";
+        const storedDate = toISO(store[userId]) || store[userId] || "";
+        const resolvedDate = storedDate || serverDateIso || "";
+
+        if (dateInput) {
+            dateInput.value = resolvedDate;
+        }
+
+        form.addEventListener('submit', () => {
+            if (dateInput && dateInput.value) {
+                store[userId] = dateInput.value;
+                localStorage.setItem('hc_users_dates', JSON.stringify(store));
+            }
+        });
+
+        const cancelLink = document.getElementById('user-cancel');
+        if (cancelLink && !cancelLink.dataset.bound) {
+            cancelLink.dataset.bound = '1';
+            cancelLink.addEventListener('click', (ev) => {
+                ev.preventDefault();
+                Swal.fire({
+                    icon: 'question',
+                    title: '¿Estás seguro que no quieres editar?',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, salir',
+                    cancelButtonText: 'Seguir editando'
+                }).then(res => { if (res.isConfirmed) window.location.href = "{% url 'admin_users' %}"; });
+            });
+        }
+    });
+</script>
+{% endblock %}

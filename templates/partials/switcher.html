@@ -1,0 +1,132 @@
+{% load i18n %}
+<div class="offcanvas offcanvas-end border-0 data-theme-colors layout-customizer" tabindex="-1" id="offcanvasRight"aria-labelledby="offcanvasRightLabel">
+    <div class="d-flex-wrap align-items-center bg-primary bg-gradient p-5 offcanvas-header">
+      <p class="m-0 text-white fw-semibold fs-16" id="offcanvasRightLabel"> {% trans "Theme Customization" %}</p>
+      <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="offcanvas" aria-label="{% trans 'Close' %}"></button>
+    </div>
+</div>
+  <div class="offcanvas-body p-0">
+    <div data-simplebar class="h-100">
+      <div class="p-6">
+        <h6 class="mb-5 fw-semibold">{% trans "Layout:" %}</h6>
+        <div class="row gy-3">
+          <div class="col-6">
+            <div class="border overflow-hidden rounded-2">
+              <!-- ... -->
+            </div>
+            <h5 class="fs-13 text-center mt-2">{% trans "Vertical" %}</h5>
+          </div>
+          <div class="col-6">
+            <div class="border overflow-hidden rounded-2">
+              <!-- ... -->
+            </div>
+            <h5 class="fs-13 text-center mt-2">{% trans "Horizontal" %}</h5>
+          </div>
+          <div class="col-6">
+            <div class="border overflow-hidden rounded-2">
+              <!-- ... -->
+            </div>
+            <h5 class="fs-13 text-center mt-2">{% trans "Semi Box" %}</h5>
+          </div>
+          <!-- end col -->
+        </div>
+        <h6 class="my-5 fw-semibold">{% trans "Content Width:" %}</h6>
+        <div class="row gy-3">
+          <div class="col-6">
+            <div class="border overflow-hidden rounded-2">
+              <!-- ... -->
+            </div>
+            <h5 class="fs-13 text-center mt-2">{% trans "Default" %}</h5>
+          </div>
+          <div class="col-6">
+            <div class="border overflow-hidden rounded-2">
+              <!-- ... -->
+            </div>
+            <h5 class="fs-13 text-center mt-2">{% trans "Box" %}</h5>
+          </div>
+          <!-- end col -->
+        </div>
+        <h6 class="my-5 fw-semibold">{% trans "Layout Direction:" %}</h6>
+        <div class="row gy-3">
+          <div class="col-6">
+            <div class="border overflow-hidden rounded-2">
+              <!-- ... -->
+            </div>
+            <h5 class="fs-13 text-center mt-2">{% trans "LTR" %}</h5>
+          </div>
+          <div class="col-6">
+            <div class="border overflow-hidden rounded-2">
+              <!-- ... -->
+            </div>
+            <h5 class="fs-13 text-center mt-2">{% trans "RTL" %}</h5>
+          </div>
+        </div>
+        <h6 class="my-5 fw-semibold">{% trans "Layout Mode:" %}</h6>
+        <div class="row gy-3">
+          <div class="col-6">
+            <div>
+              <!-- ... -->
+            </div>
+            <h5 class="fs-13 text-center mt-2">{% trans "Light" %}</h5>
+          </div>
+          <div class="col-6">
+            <div class="border overflow-hidden rounded-2">
+              <!-- ... -->
+            </div>
+            <h5 class="fs-13 text-center mt-2">{% trans "Dark" %}</h5>
+          </div>
+          <div class="col-6">
+            <div class="border overflow-hidden rounded-2">
+              <!-- ... -->
+            </div>
+            <h5 class="fs-13 text-center mt-2">{% trans "System" %}</h5>
+          </div>
+          <!-- end col -->
+        </div>
+        <h6 class="my-5 fw-semibold">{% trans "Sidebar Size:" %}</h6>
+        <div class="row gy-3">
+          <div class="col-6">
+            <div class="border overflow-hidden rounded-2">
+              <!-- ... -->
+            </div>
+            <h5 class="fs-13 text-center mt-2">{% trans "Default" %}</h5>
+          </div>
+          <div class="col-6">
+            <div class="border overflow-hidden rounded-2">
+              <!-- ... -->
+            </div>
+            <h5 class="fs-13 text-center mt-2">{% trans "Medium" %}</h5>
+          </div>
+          <div class="col-6">
+            <div class="border overflow-hidden rounded-2">
+              <!-- ... -->
+            </div>
+            <h5 class="fs-13 text-center mt-2">{% trans "Icon" %}</h5>
+          </div>
+          <div class="col-6">
+            <div class="border overflow-hidden rounded-2">
+              <!-- ... -->
+            </div>
+            <h5 class="fs-13 text-center mt-2">{% trans "Icon hover" %}</h5>
+          </div>
+          <!-- end col -->
+        </div>
+        <h6 class="my-5 fw-semibold">{% trans "Sidebar Color:" %}</h6>
+        <div id="sidebar-color" class="my-5">
+          <h6 class="mb-0 fw-semibold">{% trans "Primary Color" %}</h6>
+          <p class="text-muted">{% trans "Choose a color of Primary." %}</p>
+          <!-- ... radios/colors ... -->
+        </div>
+        <div class="flex items-center justify-end gap-2 modal-footer pt-6 border-top">
+          <button type="button" class="btn btn-light" id="resetBtn">
+            <i class="ri-reset-right-line"></i> {% trans "Reset Layouts" %}
+          </button>
+          <button type="button" class="btn btn-danger">
+            <i class="ri-shopping-bag-3-line"></i> {% trans "Buy Now" %}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- end offcanvas -->

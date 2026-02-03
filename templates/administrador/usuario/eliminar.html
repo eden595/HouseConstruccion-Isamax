@@ -1,0 +1,29 @@
+﻿{% extends "partials/layouts/main.html" %}
+{% load static %}
+
+{% include "partials/main.html" %}
+
+{% block meta %}
+{% with title="Eliminar Usuario" %}
+{% include "partials/title-meta.html" %}
+{% endwith %}
+{% endblock %}
+
+{% block content %}
+{% with title_sub="Administrador" title="Eliminar usuario"%}
+{% include "partials/pagetitle.html" %}
+{% endwith %}
+
+<div class="card">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <p>¿Seguro que deseas Desactivar al usuario<strong>{{ usuario.username }}</strong>? Esta acción no se puede deshacer.</p>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-danger px-4">Desactivar</button>
+                <a href="{% url 'admin_users' %}" class="btn btn-outline-secondary px-4">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

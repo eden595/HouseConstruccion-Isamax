@@ -1,0 +1,179 @@
+﻿{% extends "partials/layouts/master_auth.html" %}
+{% load static %}
+
+{% block meta %}
+{% with title="Iniciar sesion" %}
+    {% include "partials/title-meta.html" %}
+{% endwith %}
+{% endblock %}
+
+{% block content %}
+
+<div class="d-flex flex-column justify-content-between" style="min-height: 80vh;">
+    
+    <div class="d-flex align-items-center justify-content-center flex-grow-1 py-5">
+        <div class="col-12 col-md-8 col-lg-6 col-xl-5 auth-card-container">
+
+
+            <div class="card mx-xxl-8 auth-card">
+                <div class="card-body p-8">
+
+                    <div class="auth-card-hero">
+                        <img src="{% static 'assets/images/logo-md.png' %}" alt="Logo House Construccion" class="auth-card-logo">
+                        <div class="auth-card-brand">
+                            <span>House</span>
+                            <span>Construccion</span>
+                        </div>
+                    </div>
+
+                    <h3 class="fw-medium text-center">Bienvenido de nuevo!</h3>
+                    <p class="mb-8 text-muted text-center">Inicia sesion en tu cuenta</p>
+
+                    <form id="signinForm" method="post" action="{% url 'signin' %}">
+                        {% csrf_token %}
+
+
+                        <div class="mb-4">
+                            <label class="form-label">
+                                Usuario <span class="text-danger">*</span>
+                            </label>
+                            <input 
+                                type="text"
+                                class="form-control"
+                                name="username"
+                                id="username"
+                                placeholder="Ingresa tu nombre de usuario"
+                                value="{{ username }}"
+                                required>
+                        </div>
+
+
+                        <div class="mb-4">
+                            <label class="form-label">
+                                Contraseña <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <input 
+                                    type="password"
+                                    class="form-control no-reveal"
+                                    name="password"
+                                    id="password"
+                                    placeholder="Ingresa tu contraseña"
+                                    autocomplete="current-password"
+                                    required>
+                                <button type="button" class="btn btn-outline-secondary" tabindex="-1" onclick="togglePass('password', this)" aria-label="Mostrar contraseña">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+
+
+                        <div class="my-6">
+                            <div class="form-check">
+                                <input 
+                                    type="checkbox"
+                                    class="form-check-input"
+                                    id="rememberMe"
+                                    name="rememberMe">
+                                <label class="form-check-label" for="rememberMe">Recuerdame</label>
+                            </div>
+                        </div>
+
+
+                        <button type="submit" class="btn btn-primary w-100 mb-4">
+                            Iniciar sesion
+                        </button>
+                    </form>
+
+
+                    <p class="text-center mt-6 mb-0 text-muted fs-13">
+                        No tienes una cuenta?
+                        <a href="{% url 'signup' %}" class="link fw-semibold">Registrate aqui</a>
+                    </p>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
+
+{% block footer %}
+    {% include "partials/footer-login.html" %}
+{% endblock footer %}
+
+{% block js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const STORAGE_USER = 'hc_remember_username';
+    const STORAGE_PASS = 'hc_remember_password';
+    const STORAGE_FLAG = 'hc_remember_enabled';
+
+    const form = document.getElementById('signinForm');
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const rememberCheckbox = document.getElementById('rememberMe');
+
+    // Prefill if remembered
+    const rememberEnabled = localStorage.getItem(STORAGE_FLAG) === 'true';
+    if (rememberEnabled) {
+        rememberCheckbox.checked = true;
+        const savedUser = localStorage.getItem(STORAGE_USER) || '';
+        const savedPass = localStorage.getItem(STORAGE_PASS) || '';
+        if (savedUser) usernameInput.value = savedUser;
+        if (savedPass) passwordInput.value = savedPass;
+    }
+
+    // On submit, persist or clear
+    form?.addEventListener('submit', () => {
+        if (rememberCheckbox.checked) {
+            localStorage.setItem(STORAGE_FLAG, 'true');
+            localStorage.setItem(STORAGE_USER, usernameInput.value || '');
+            localStorage.setItem(STORAGE_PASS, passwordInput.value || '');
+        } else {
+            localStorage.removeItem(STORAGE_FLAG);
+            localStorage.removeItem(STORAGE_USER);
+            localStorage.removeItem(STORAGE_PASS);
+        }
+    });
+
+    // Password toggle
+    window.togglePass = function(id, btn) {
+        const input = document.getElementById(id);
+        if (!input) return;
+        const isPass = input.type === 'password';
+        input.type = isPass ? 'text' : 'password';
+        const icon = btn.querySelector('i');
+        if (icon) icon.className = isPass ? 'bi bi-eye-slash' : 'bi bi-eye';
+        btn.setAttribute('aria-label', isPass ? 'Ocultar contraseña' : 'Mostrar contraseña');
+    };
+
+    // SweetAlert con mensajes Django
+    const djangoMessages = [
+      {% for message in messages %}
+        { level: "{{ message.tags }}", text: "{{ message|escapejs }}" }
+        {% if not forloop.last %},{% endif %}
+      {% endfor %}
+    ];
+
+    djangoMessages.forEach(msg => {
+        let icon = "info", title = "Aviso";
+
+        if (msg.level.includes("error"))   { icon = "error";   title = "Error"; }
+        if (msg.level.includes("success")) { icon = "success"; title = "Exito"; }
+        if (msg.level.includes("warning")) { icon = "warning"; title = "Atencion"; }
+
+        Swal.fire({
+            icon: icon,
+            title: title,
+            text: msg.text,
+            confirmButtonColor: "#4e5dff"
+        });
+    });
+
+});
+</script>
+{% endblock js %}

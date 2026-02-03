@@ -1,0 +1,57 @@
+{% extends "partials/layouts/master_auth.html" %}
+{% load static %}
+
+{% include "partials/main.html" %}
+
+{% block meta %}
+  {% with title="Restablecer contraseña" %}
+    {% include "partials/title-meta.html" %}
+  {% endwith %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="row justify-content-center align-items-center min-vh-100 pt-20 pb-10">
+    <div class="col-12 col-md-8 col-lg-6 col-xl-5">
+      <div class="card mx-xxl-8 shadow-none">
+        <div class="card-body p-8">
+          <h3 class="fw-medium text-center">Toma el control</h3>
+          <p class="mb-8 text-muted text-center">Inicia sesión con tu nueva contraseña una vez configurada.</p>
+          <form>
+            <div class="mb-4">
+              <label for="password" class="form-label">Contraseña <span class="text-danger">*</span></label>
+              <div class="position-relative">
+                <input type="password" class="form-control" id="password" placeholder="Ingresa tu contraseña" required />
+                <button type="button" class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted toggle-password" id="toggle-password" data-target="password">
+                  <i class="ri-eye-off-line align-middle"></i>
+                </button>
+              </div>
+            </div>
+            <div>
+              <label for="confirmPassword" class="form-label">Confirmar contraseña <span class="text-danger">*</span></label>
+              <div class="position-relative">
+                <input type="password" class="form-control" id="confirmPassword" placeholder="Repite tu contraseña" required />
+                <button type="button" class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted toggle-password" data-target="confirmPassword">
+                  <i class="ri-eye-off-line align-middle"></i>
+                </button>
+              </div>
+            </div>
+            <a href="index.html" class="btn btn-primary w-100 mt-6">Establecer contraseña</a>
+          </form>
+          <p class="text-center mb-0 text-muted fs-13 mt-6">
+            Volver a <a href="iniciar_sesion.html" class="link fw-semibold">Iniciar sesión</a>
+          </p>
+        </div>
+      </div>
+      <p class="position-relative text-center fs-13 mb-0">
+        © <script>document.write(new Date().getFullYear());</script>
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock content %}
+
+<script src="/static/assets/js/auth/auth.init.js"></script>
+
+{% block js %}
+{% endblock js %}

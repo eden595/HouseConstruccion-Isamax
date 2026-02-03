@@ -1,0 +1,41 @@
+{% extends "partials/layouts/master_auth.html" %}
+{% load static %}
+
+{% include "partials/main.html" %}
+
+{% block meta %}
+  {% with title="Recuperar contraseña" %}
+    {% include "partials/title-meta.html" %}
+  {% endwith %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="row justify-content-center align-items-center min-vh-100 pt-20 pb-10">
+    <div class="col-12 col-md-8 col-lg-6 col-xl-5">
+      <div class="card mx-xxl-8 shadow-none">
+        <div class="card-body p-8">
+          <h3 class="fw-medium text-center">¿Olvidaste tu contraseña?</h3>
+          <p class="mb-8 text-muted text-center">¡No te preocupes! Ingresa tu correo y te enviaremos un enlace de recuperación.</p>
+          <form>
+            <div>
+              <label for="username" class="form-label">Usuario <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="username" name="username" required />
+            </div>
+            <a href="verificar_correo.html" class="btn btn-primary w-full my-6">Crear contraseña</a>
+          </form>
+          <p class="text-center mb-0 text-muted fs-13">
+            ¿Recordaste tu contraseña? <a href="iniciar_sesion.html" class="link fw-semibold">Inicia sesión aquí</a>
+          </p>
+        </div>
+      </div>
+      <p class="position-relative text-center fs-13 mb-0">
+        © <script>document.write(new Date().getFullYear());</script>
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock content %}
+
+{% block js %}
+{% endblock js %}

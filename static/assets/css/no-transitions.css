@@ -1,0 +1,99 @@
+/* ========================================
+   NO TRANSITIONS - OVERRIDE ABSOLUTO
+   ======================================== */
+
+/* UNIVERSAL */
+*,
+*::before,
+*::after,
+html,
+body {
+    transition: none !important;
+    animation: none !important;
+    -webkit-transition: none !important;
+    -moz-transition: none !important;
+    -o-transition: none !important;
+    transition-duration: 0s !important;
+    animation-duration: 0s !important;
+}
+
+/* BODY STATES */
+body,
+body.sidebar-open,
+body.sidebar-closed,
+body[class*="sidebar"] {
+    transition: none !important;
+    animation: none !important;
+}
+
+/* SIDEBAR */
+.pe-app-sidebar,
+.pe-app-sidebar *,
+.sidebar-overlay,
+.pe-nav-link,
+.pe-slide {
+    transition: none !important;
+    animation: none !important;
+}
+
+/* LAYOUT */
+#layout-wrapper,
+.app-wrapper,
+.app-header,
+.app-footer,
+main {
+    transition: none !important;
+    animation: none !important;
+}
+
+/* BOOTSTRAP */
+.fade,
+.fade.show,
+.collapse,
+.collapsing,
+.modal,
+.modal-backdrop,
+.dropdown-menu {
+    transition: none !important;
+    animation: none !important;
+    opacity: 1 !important;
+}
+
+/* DATATABLES */
+.dataTable,
+.dataTable *,
+.dataTables_wrapper,
+.dataTables_wrapper * {
+    transition: none !important;
+    animation: none !important;
+}
+
+/* FORMULARIOS */
+form,
+form *,
+input,
+textarea,
+select,
+button,
+.form-control,
+.form-select,
+.btn {
+    transition: none !important;
+    animation: none !important;
+}
+
+/* CARDS */
+.card,
+.card * {
+    transition: none !important;
+    animation: none !important;
+}
+
+/* PERFORMANCE */
+html {
+    scroll-behavior: auto !important;
+}
+
+* {
+    will-change: auto !important;
+}

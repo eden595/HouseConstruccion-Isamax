@@ -1,0 +1,232 @@
+﻿{% extends "partials/layouts/main.html" %}
+{% load static %}
+
+{% include "partials/main.html" %}
+
+{% block css %}
+<link href="{% static 'css/jquery.dataTables.min.css' %}" rel="stylesheet" />
+<link href="{% static 'css/responsive.dataTables.min.css' %}" rel="stylesheet" />
+<style>
+  .btn-edit-orange {
+    background: #ff7a00 !important;
+    border-color: #ff7a00 !important;
+    color: #fff !important;
+    min-width: 72px;
+  }
+
+  .btn-edit-orange:hover {
+    background: #e66c00 !important;
+    border-color: #e66c00 !important;
+  }
+
+  .btn-toggle {
+    min-width: 100px;
+    border-radius: 6px;
+  }
+
+  .btn-activar {
+    border: 1px solid #18a55b !important;
+    color: #18a55b !important;
+    background: transparent !important;
+    min-width: 100px;
+    text-align: center;
+  }
+
+  .btn-activar:hover {
+    background: #18a55b !important;
+    color: #fff !important;
+  }
+
+  .btn-desactivar {
+    border: 1px solid #c0392b !important;
+    color: #c0392b !important;
+    background: transparent !important;
+    min-width: 100px;
+    text-align: center;
+  }
+
+  .btn-desactivar:hover {
+    background: #c0392b !important;
+    color: #fff !important;
+  }
+
+  .pill-status {
+    min-width: 78px;
+    display: inline-block;
+  }
+</style>
+{% endblock %}
+
+{% block meta %}
+{% with title="Administracion - Proveedores" %}
+{% include "partials/title-meta.html" %}
+{% endwith %}
+{% endblock %}
+
+{% block content %}
+{% with title_sub="Administrador" title="Proveedores" %}
+{% include "partials/pagetitle.html" %}
+{% endwith %}
+
+<div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3 mb-3">
+  <a href="{% url 'admin_proveedores_create' %}" class="btn btn-success text-nowrap px-3">
+    <i class="bi bi-plus-lg me-1"></i> Nuevo proveedor</a>
+  <div class="d-flex align-items-center gap-2" style="max-width: 320px; width: 100%;">
+    <label class="mb-0 small text-muted">Buscar:</label>
+    <input type="text" id="searchProveedores" class="form-control form-control-sm" placeholder="Proveedor, rut" style="max-width: 200px;" />
+  </div>
+</div>
+<div class="card mb-4">
+  <div class="card-body">
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-start gap-2 mb-3">
+      <label class="mb-0 small text-muted">Mostrar</label>
+      <select id="customLengthProveedores" class="form-select form-select-sm" style="max-width: 140px;"
+        aria-label="Cantidad de registros a mostrar">
+        <option value="10" selected>10</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+        <option value="-1">Todos</option>
+      </select>
+      <span class="small text-muted">registros</span>
+    </div>
+    <div class="table-responsive">
+      <table id="table_proveedores" class="table align-middle table-striped mb-0">
+        <thead class="table-light">
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Proveedor</th>
+            <th scope="col">RUT</th>
+            <th scope="col">Fecha creacion</th>
+            <th scope="col">Estado</th>
+            <th scope="col">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in proveedores %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ p.nombre }}</td>
+            <td>{{ p.rut }}</td>
+            <td>{{ p.fecha_creacion|date:"Y-m-d" }}</td>
+            <td><span
+                class="badge pill-status {% if p.estado %}bg-success{% else %}bg-secondary{% endif %} px-3 py-2">{% if p.estado %}Activo{% else %}Inactivo{% endif %}</span></td>
+            <td>
+              <div class="d-flex gap-2">
+                <a class="btn-action-edit" href="{% url 'admin_proveedores_edit' p.id %}">Editar</a>
+                <form method="post" action="{% url 'admin_proveedores_toggle' pk=p.id %}" class="d-inline toggle-form">
+                  {% csrf_token %}
+                  <button type="submit"
+                    class="btn btn-sm btn-toggle toggle-btn {% if p.estado %}btn-desactivar{% else %}btn-activar{% endif %}">
+                    {% if p.estado %}Desactivar{% else %}Activar{% endif %}
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script type="application/javascript">
+  document.addEventListener('DOMContentLoaded', () => {
+    const table = new DataTable('#table_proveedores', {
+      language: {
+        url: '{% static "json/es-CL.json" %}',
+    },
+      dom: 'rtip',
+      columnDefs: [
+      { searchable: false, targets: [0, 5] },
+      { orderable: false, targets: [5] }
+    ]
+      });
+
+  const djangoMessages = [
+    {% for message in messages %}
+  { level: '{{ message.tags|default:"info" }}', text: '{{ message|escapejs }}' } {% if not forloop.last %}, {% endif %}
+  {% endfor %}
+        ];
+  if (djangoMessages.length && typeof Swal !== 'undefined') {
+    const last = djangoMessages[djangoMessages.length - 1];
+    const lvl = (last.level || '').toLowerCase();
+    const icon = lvl.includes('success') ? 'success' : lvl.includes('error') ? 'error' : lvl.includes('warning') ? 'warning' : 'info';
+    const defaultText = lvl.includes('info') ? 'No modificaste ningún dato.' : undefined;
+    Swal.fire({
+      icon,
+      title: last.text || 'Ha sido actualizado con éxito.',
+      text: defaultText,
+      position: 'center',
+      toast: false,
+      showConfirmButton: false,
+      timer: 1800
+    });
+  }
+
+  const searchInput = document.getElementById('searchProveedores');
+  if (searchInput) {
+    searchInput.addEventListener('keyup', () => {
+      table.search(searchInput.value.trim()).draw();
+    });
+  }
+
+  const lengthSelect = document.getElementById('customLengthProveedores');
+  if (lengthSelect) {
+    lengthSelect.addEventListener('change', () => {
+      table.page.len(lengthSelect.value).draw();
+    });
+  }
+
+  // Toggle estado sin recargar
+  const bindToggle = () => {
+    document.querySelectorAll('.toggle-form').forEach(form => {
+      if (form.dataset.bound === '1') return;
+      form.dataset.bound = '1';
+      form.addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const btn = form.querySelector('.toggle-btn');
+        const row = form.closest('tr');
+        const badge = row ? row.querySelector('.pill-status') : null;
+        if (!btn || !badge) return;
+        btn.disabled = true;
+        try {
+          const resp = await fetch(form.action, {
+            method: 'POST',
+            body: new FormData(form),
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+          });
+          if (!resp.ok) throw new Error('Error al actualizar');
+          const isActivo = badge.textContent.trim().toLowerCase() === 'activo';
+          const nuevoEstado = isActivo ? 'Inactivo' : 'Activo';
+          badge.textContent = nuevoEstado;
+          badge.classList.toggle('bg-success', nuevoEstado === 'Activo');
+          badge.classList.toggle('bg-secondary', nuevoEstado !== 'Activo');
+          btn.textContent = nuevoEstado === 'Activo' ? 'Desactivar' : 'Activar';
+          btn.classList.toggle('btn-desactivar', nuevoEstado === 'Activo');
+          btn.classList.toggle('btn-activar', nuevoEstado !== 'Activo');
+          table.rows().invalidate('dom').draw(false);
+          if (window.Swal) {
+            Swal.fire({ icon: 'success', title: `Estado ${nuevoEstado.toLowerCase()}`, timer: 1200, showConfirmButton: false });
+          }
+        } catch (err) {
+          if (window.Swal) {
+            Swal.fire({ icon: 'error', title: 'No se pudo actualizar', text: 'Inténtalo nuevamente', timer: 1800, showConfirmButton: false });
+          }
+        } finally {
+          btn.disabled = false;
+        }
+      });
+    });
+  };
+  bindToggle();
+
+      });
+</script>
+{% endblock js %}

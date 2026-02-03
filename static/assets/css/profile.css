@@ -1,0 +1,88 @@
+/* ============================
+   PORTADA (COVER)
+   ============================ */
+
+.profile-cover-img {
+    height: 20px;
+    object-fit: cover;
+}
+
+/* ============================
+   AVATAR FLOTANTE
+   ============================ */
+
+.profile-avatar-wrapper {
+    bottom: -52px;
+}
+
+.profile-avatar {
+    width: 110px;
+    height: 110px;
+    object-fit: cover;
+    border: 4px solid #fff;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.18);
+}
+
+/* ============================
+   ESPACIADO DEL BLOQUE PRINCIPAL
+   ============================ */
+
+.profile-main-info {
+    padding-top: 72px;
+}
+
+/* ============================
+   RESPONSIVE
+   ============================ */
+
+@media (max-width: 767.98px) {
+
+    .profile-cover-img {
+        height: 180px;
+    }
+
+    .profile-avatar-wrapper {
+        left: 1.25rem !important;
+    }
+
+    .profile-main-info {
+        padding-top: 80px;
+    }
+}
+
+/* ============================
+   Tarjetas de información
+   ============================ */
+
+.card h5.card-title {
+    font-weight: 600;
+}
+
+.card-body .avatar-xs {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+}
+
+/* ============================
+   Pequeño refinamiento UI
+   ============================ */
+
+.profile-mini-stats {
+    background: #f8f9fa;
+    padding: 12px 20px;
+    border-radius: 10px;
+    border: 1px solid #eef0f4;
+}
+
+.profile-mini-stats div {
+    min-width: 90px;
+}
+
+.profile-mini-stats .fw-semibold {
+    font-size: 16px;
+}
+
+.profile-mini-stats span.text-muted {
+    font-size: 13px;
+}

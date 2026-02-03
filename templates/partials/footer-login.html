@@ -1,0 +1,32 @@
+{% load i18n %}
+<!-- Begin Footer -->
+<footer class="footer-login w-100 m-0 p-0">
+  <div class="container-fluid p-0">
+    <div class="footer-bar text-center py-3 px-3">
+      <small>
+        <span class="d-inline-block">
+          <script>document.write(new Date().getFullYear())</script>
+          Copyright &copy; House Construcci&oacute;n. {{ _("Todos los derechos reservados.") }}
+          {{ _("Dise&ntilde;ado y desarrollado por") }}
+          <a href="https://www.isamax.cl" target="_blank" rel="noopener noreferrer" class="text-link-blue">www.isamax.cl</a>
+        </span>
+      </small>
+    </div>
+  </div>
+</footer>
+<!-- END Footer -->
+
+<style>
+.footer-login,
+.footer-login .container-fluid,
+.footer-login .footer-bar {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+.footer-bar {
+  color: var(--bs-body-color) !important;
+}
+.footer-bar a.text-link-blue { color: #3b82f6; text-decoration: none; }
+.footer-bar small { color: var(--bs-body-color) !important; }
+</style>

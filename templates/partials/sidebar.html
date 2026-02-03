@@ -1,0 +1,148 @@
+﻿{% load i18n %}
+{% with current=request.resolver_match.url_name %}
+<aside class="pe-app-sidebar" id="sidebar">
+    <div class="pe-app-sidebar-logo px-6 d-flex align-items-center position-relative">
+        <a href="{% url 'home' %}" class="d-flex align-items-center logo-main text-decoration-none">
+            <img height="35" width="34" class="logo-dark" alt="{% trans 'Logo' %}" src="/static/assets/images/logo-md.png">
+            <h5 class="fw-bold mb-0 ms-2 text-body sidebar-title">House Construccion</h5>
+        </a>
+    </div>
+
+    <nav class="pe-app-sidebar-menu nav nav-pills" data-simplebar id="sidebar-simplebar">
+        <div class="d-flex align-items-start flex-column w-100">
+            <ul class="pe-main-menu list-unstyled">
+
+                <li class="pe-slide {% if current == 'home' %}pe-active{% endif %}">
+                    <a href="{% url 'home' %}" class="pe-nav-link" id="navHome">
+                        <i class="ri-dashboard-line pe-nav-icon"></i>
+                        <span class="pe-nav-content">{% trans "Dashboard" %}</span>
+                    </a>
+                </li>
+
+                {% with gastos_urls="admin_gasto_ingresar admin_gasto_lista admin_gasto_editar" %}
+<li class="pe-slide pe-has-sub {% if current in gastos_urls %}pe-open{% endif %}">
+    <a href="#collapseGastos" class="pe-nav-link {% if current in gastos_urls %}active{% endif %}" data-bs-toggle="collapse">
+        <i class="ri-money-dollar-circle-line pe-nav-icon"></i>
+        <span class="pe-nav-content">Rendición de gastos</span>
+        <i class="ri-arrow-down-s-line pe-nav-arrow"></i>
+    </a>
+    <ul class="pe-slide-menu collapse {% if current in gastos_urls %}show{% endif %}" id="collapseGastos">
+        <li class="pe-slide-item">
+            <a href="{% url 'admin_gasto_ingresar' %}" class="pe-nav-link {% if current == 'admin_gasto_ingresar' %}active{% endif %}">Ingresar gastos</a>
+        </li>
+        <li class="pe-slide-item">
+            <a href="{% url 'admin_gasto_lista' %}" class="pe-nav-link {% if current == 'admin_gasto_lista' %}active{% endif %}">Ver gastos</a>
+        </li>
+    </ul>
+</li>
+{% endwith %}
+
+{% with libro_urls="registro_libro_create registro_libro_list registro_libro_update" %}
+<li class="pe-slide pe-has-sub {% if current in libro_urls %}pe-open{% endif %}">
+    <a href="#collapseLibroObras" class="pe-nav-link {% if current in libro_urls %}active{% endif %}" data-bs-toggle="collapse">
+        <i class="ri-building-line pe-nav-icon"></i>
+        <span class="pe-nav-content">Libro de Obras</span>
+        <i class="ri-arrow-down-s-line pe-nav-arrow"></i>
+    </a>
+    <ul class="pe-slide-menu collapse {% if current in libro_urls %}show{% endif %}" id="collapseLibroObras">
+        <li class="pe-slide-item">
+            <a href="{% url 'registro_libro_create' %}" class="pe-nav-link {% if current == 'registro_libro_create' %}active{% endif %}">Ingresar registro</a>
+        </li>
+        <li class="pe-slide-item">
+            <a href="{% url 'registro_libro_list' %}" class="pe-nav-link {% if current == 'registro_libro_list' %}active{% endif %}">Ver registros</a>
+        </li>
+    </ul>
+</li>
+{% endwith %}
+
+                <li class="pe-slide pe-has-sub">
+                    <a href="#collapseEstadistica" class="pe-nav-link" data-bs-toggle="collapse" aria-expanded="false" aria-controls="collapseEstadistica">
+                        <i class="ri-bar-chart-box-line pe-nav-icon"></i>
+                        <span class="pe-nav-content">{% trans "Estad&iacute;stica" %}</span>
+                        <i class="ri-arrow-down-s-line pe-nav-arrow"></i>
+                    </a>
+                    <ul class="pe-slide-menu collapse" id="collapseEstadistica">
+                        <li class="pe-slide-item">
+                            <a href="#" class="pe-nav-link">{% trans "Por Gastos" %}</a>
+                        </li>
+                        <li class="pe-slide-item">
+                            <a href="#" class="pe-nav-link">{% trans "Por Avances por obra" %}</a>
+                        </li>
+                    </ul>
+                </li>
+
+                {% with admin_open_list="admin_users admin_users_create admin_users_edit admin_users_delete admin_users_toggle admin_proveedores admin_proveedores_create admin_proveedores_edit admin_proveedores_delete admin_categorias admin_categorias_create admin_tipo_documento admin_tipo_documento_create paises_list pais_create pais_update pais_delete ciudades_list ciudad_create ciudad_update ciudad_delete estados_list estado_create estado_update estado_delete" %}
+                <li class="pe-slide pe-has-sub {% if current in admin_open_list %}pe-open{% endif %}">
+                    <a href="#collapseAdministracion" class="pe-nav-link" data-bs-toggle="collapse" aria-expanded="{% if current in admin_open_list %}true{% else %}false{% endif %}" aria-controls="collapseAdministracion">
+                        <i class="ri-settings-3-line pe-nav-icon"></i>
+                        <span class="pe-nav-content">{% trans "Administraci&oacute;n" %}</span>
+                        <i class="ri-arrow-down-s-line pe-nav-arrow"></i>
+                    </a>
+                    <ul class="pe-slide-menu collapse {% if current in admin_open_list %}show{% endif %}" id="collapseAdministracion">
+                        <li class="pe-slide-item">
+                            <a href="{% url 'admin_users' %}" class="pe-nav-link {% if current == 'admin_users' or 'admin_users' in current and 'create' not in current and 'edit' not in current %}active{% endif %}">
+                                <span class="pe-nav-content">{% trans "Usuarios" %}</span>
+                            </a>
+                        </li>
+
+                        <li class="pe-slide-item pe-has-sub">
+                            <a href="#collapseAdminGastos" class="pe-nav-link" data-bs-toggle="collapse" aria-expanded="false" aria-controls="collapseAdminGastos">
+                                <i class="ri-file-list-3-line pe-nav-icon"></i>
+                                <span class="pe-nav-content">{% trans "Gastos" %}</span>
+                                <i class="ri-arrow-down-s-line pe-nav-arrow"></i>
+                            </a>
+                            <ul class="pe-slide-menu collapse" id="collapseAdminGastos">
+                                <li class="pe-slide-item">
+                                    <a href="{% url 'admin_categorias' %}" class="pe-nav-link {% if current in 'admin_categorias admin_categorias_create' %}active{% endif %}">{% trans "Categor&iacute;as" %}</a>
+                                </li>
+                                <li class="pe-slide-item">
+                                    <a href="{% url 'admin_proveedores' %}" class="pe-nav-link {% if current in 'admin_proveedores admin_proveedores_create admin_proveedores_edit admin_proveedores_delete' %}active{% endif %}">{% trans "Proveedores" %}</a>
+                                </li>
+                                <li class="pe-slide-item">
+                                    <a href="{% url 'admin_tipo_documento' %}" class="pe-nav-link {% if current in 'admin_tipo_documento admin_tipo_documento_create' %}active{% endif %}">Tipo de Documento</a>
+                                </li>
+                            </ul>
+                        </li>
+
+                        <li class="pe-slide-item pe-has-sub {% if current in 'paises_list pais_create pais_update pais_delete ciudades_list ciudad_create ciudad_update ciudad_delete estados_list estado_create estado_update estado_delete' %}pe-open{% endif %}">
+                            <a href="#collapseAdminObras" class="pe-nav-link" data-bs-toggle="collapse" aria-expanded="{% if current in 'paises_list pais_create pais_update pais_delete ciudades_list ciudad_create ciudad_update ciudad_delete estados_list estado_create estado_update estado_delete' %}true{% else %}false{% endif %}" aria-controls="collapseAdminObras">
+                                <i class="ri-building-line pe-nav-icon"></i>
+                                <span class="pe-nav-content">{% trans "Obras" %}</span>
+                                <i class="ri-arrow-down-s-line pe-nav-arrow"></i>
+                            </a>
+                            <ul class="pe-slide-menu collapse {% if current in 'paises_list pais_create pais_update pais_delete ciudades_list ciudad_create ciudad_update ciudad_delete estados_list estado_create estado_update estado_delete' %}show{% endif %}" id="collapseAdminObras">
+                                <li class="pe-slide-item">
+                                    <a href="{% url 'obra_list' %}" class="pe-nav-link {% if 'obra_list' in request.resolver_match.url_name %}active{% endif %}">{% trans "Lista de Obras" %}</a>
+                                </li>
+                                <li class="pe-slide-item">
+                                    <a href="{% url 'core:estados_list' %}" class="pe-nav-link {% if current in 'estados_list estado_create estado_update estado_delete' %}active{% endif %}">{% trans "Estado" %}</a>
+                                </li>
+                                <li class="pe-slide-item">
+                                    <a href="{% url 'core:ciudades_list' %}" class="pe-nav-link {% if current in 'ciudades_list ciudad_create ciudad_update ciudad_delete' %}active{% endif %}">{% trans "Ciudad" %}</a>
+                                </li>
+                                <li class="pe-slide-item">
+                                    <a href="{% url 'core:paises_list' %}" class="pe-nav-link {% if current in 'paises_list pais_create pais_update pais_delete' %}active{% endif %}">{% trans "Pa&iacute;s" %}</a>
+                                </li>
+                            </ul>
+                        </li>
+
+                    </ul>
+                </li>
+                {% endwith %}
+            </ul>
+        </div>
+    </nav>
+</aside>
+{% endwith %}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const homeLink = document.getElementById('navHome');
+        const homePath = "{% url 'home' %}";
+        const currentPath = window.location.pathname;
+        if (homeLink && currentPath !== homePath) {
+            homeLink.classList.remove('active');
+            homeLink.closest('.pe-slide')?.classList.remove('pe-active');
+        }
+    });
+</script>

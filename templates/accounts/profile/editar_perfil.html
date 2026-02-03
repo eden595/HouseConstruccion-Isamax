@@ -1,0 +1,305 @@
+{% extends "partials/layouts/main.html" %}
+{% load static %}
+
+{% include "partials/main.html" %}
+
+{% block meta %}
+  {% with title="Editar perfil" %}
+    {% include "partials/title-meta.html" %}
+  {% endwith %}
+{% endblock %}
+
+{% block css %}
+  <style>
+    .profile-role-badge {
+      font-size: 12px;
+      font-weight: 600;
+      padding-inline: 10px;
+      padding-block: 3px;
+      border-radius: 999px;
+      text-transform: capitalize;
+      border: 1px solid transparent;
+    }
+    html[data-bs-theme="light"] .profile-role-badge {
+      background: #eef2ff;
+      color: #4338ca;
+      border-color: #d8def8;
+    }
+    html[data-bs-theme="dark"] .profile-role-badge {
+      background: #1a1b2e;
+      color: #e0e7ff;
+      border-color: rgba(255, 255, 255, 0.12);
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  {% with title_sub="Perfil" title="Editar perfil" %}
+    {% include "partials/pagetitle.html" %}
+  {% endwith %}
+
+<form id="profileForm" method="post" enctype="multipart/form-data" data-edit-mode="1">
+  {% csrf_token %}
+
+  <div class="card profile-main-card border-0 mb-4 shadow-sm">
+    <div class="card-body px-4 px-lg-5 py-4">
+      <div class="d-flex flex-column flex-md-row align-items-start gap-3 gap-md-4">
+        <div class="d-flex flex-column align-items-start gap-3">
+          <div class="profile-avatar-wrapper position-relative">
+            {% if profile.image %}
+            <img src="{{ profile.image.url }}" alt="Avatar" class="profile-avatar-lg rounded-circle border" style="width: 96px; height: 96px; object-fit: cover; border-color: #e1e3f0;" />
+            {% else %}
+            <img src="{% static 'assets/images/avatar/avatar-3.jpg' %}" alt="Avatar" class="profile-avatar-lg rounded-circle border" style="width: 96px; height: 96px; object-fit: cover; border-color: #e1e3f0;" />
+            {% endif %}
+            <span class="profile-status-dot position-absolute" style="bottom: 6px; right: 8px; width: 14px; height: 14px; border-radius: 999px; background: #22c55e; border: 2px solid #fff;"></span>
+          </div>
+
+          <div class="w-100" style="max-width: 360px;">
+            <label class="form-label mb-1">Foto de perfil</label>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+              <label for="profile-image" class="btn btn-sm btn-primary mb-0" id="btn-trigger-upload">Agregar imagen</label>
+              <button type="button" id="btn-remove-image" data-has="{% if profile.image %}1{% else %}0{% endif %}" class="btn btn-outline-danger btn-sm" style="display: none;">Quitar imagen</button>
+              <input type="file" name="image" id="profile-image" class="form-control form-control-sm d-none" accept="image/*" />
+              <input type="hidden" name="remove_image" id="remove_image_flag" value="0" />
+            </div>
+            <div class="text-muted small mt-1" id="profile-image-hint">
+              {% if profile.image %}Foto actual: {{ profile.image.name }}{% else %}No tienes foto de perfil cargada.{% endif %}
+            </div>
+            <div id="profile-preview-wrapper" class="position-relative" style="width: 120px; height: 120px; margin-top: 8px;{% if not profile.image %} display:none;{% endif %}">
+              <img
+                id="profile-image-preview"
+                src="{% if profile.image %}{{ profile.image.url }}{% endif %}"
+                data-initial-src="{% if profile.image %}{{ profile.image.url }}{% endif %}"
+                alt="Previsualizacion"
+                style="display:{% if profile.image %}block{% else %}none{% endif %}; width: 120px; height: 120px; object-fit: cover; border-radius: 12px; border: 1px solid #2e3340;"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="flex-grow-1">
+          <h3 class="mb-1 d-flex flex-wrap align-items-center gap-2">
+            {% if request.user.first_name or request.user.last_name %} {{ request.user.first_name }} {{ request.user.last_name }} {% else %} {{ request.user.username }} {% endif %} {% with request.user.groups.first as main_group %} {% if main_group %}
+            <span class="badge rounded-pill profile-role-badge">{{ main_group.name }}</span>
+            {% endif %} {% endwith %}
+          </h3>
+
+          <div class="text-muted mb-1 d-flex align-items-center gap-2">
+            <i class="ri-user-3-line me-1 align-middle"></i>
+            <span class="small">{{ request.user.username }}</span>
+          </div>
+
+          <div class="text-muted d-flex align-items-center gap-2">
+            <i class="ri-mail-line me-1 align-middle"></i>
+            <span class="small">{{ request.user.email|default:"Sin correo" }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-0 align-items-stretch">
+    <div class="col-12">
+      <div class="card mb-4 shadow-sm profile-form-card w-100 h-100" style="margin-bottom:0;">
+        <div class="card-header border-0 pb-0" style="background: transparent">
+          <div>
+            <div class="profile-section-title" style="font-size: 14px; color: #6c6f7a">PERFIL</div>
+            <h4 class="card-title mb-0" style="font-size: 20px; font-weight: 700">Editar datos personales</h4>
+          </div>
+        </div>
+
+        <div class="card-body d-flex flex-column" style="font-size: 16px; padding: 1.5rem;">
+          <div class="row g-3 align-items-stretch">
+            <div class="col-12 col-md-4">
+              <label class="text-muted small mb-1" style="font-size: 14px">Nombres</label>
+              <input type="text" name="first_name" class="form-control" value="{{ request.user.first_name }}" />
+            </div>
+
+            <div class="col-12 col-md-4">
+              <label class="text-muted small mb-1" style="font-size: 14px">Apellidos</label>
+              <input type="text" name="last_name" class="form-control" value="{{ request.user.last_name }}" />
+            </div>
+
+            <div class="col-12 col-md-4">
+              <label class="text-muted small mb-1" style="font-size: 14px">Usuario</label>
+              <input type="text" class="form-control" value="{{ request.user.username }}" disabled />
+            </div>
+
+            <div class="col-12 col-md-4">
+              <label class="text-muted small mb-1" style="font-size: 14px">Correo electronico</label>
+              <input type="email" class="form-control" value="{{ request.user.email|default:'Sin correo registrado' }}" disabled />
+            </div>
+
+            <div class="col-12 col-md-4">
+              <label class="text-muted small mb-1" style="font-size: 14px">Telefono</label>
+              <input type="text" name="phone" class="form-control" value="{{ profile.phone|default:'' }}" />
+            </div>
+
+            <div class="col-12 col-md-4">
+              <label class="text-muted small mb-1" style="font-size: 13px">Rol</label>
+              <div class="profile-info-box fw-semibold">
+                {% with request.user.groups.first as main_group %} {% if main_group %} {{ main_group.name }} {% else %} Sin rol {% endif %} {% endwith %}
+              </div>
+            </div>
+
+            <div class="col-12 col-md-4">
+              <label class="text-muted small mb-1" style="font-size: 14px">Cuenta creada</label>
+              <input type="text" class="form-control" value="{{ request.user.date_joined|date:'d/m/Y' }}" disabled />
+            </div>
+          </div>
+          <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-primary px-4 fw-semibold" style="border-radius:4px;">Guardar cambios</button>
+            <a href="{% url 'profile' %}" class="btn btn-outline-secondary px-4 fw-semibold" style="border-radius:4px;" id="user-cancel">Cancelar</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+{% endblock content %}
+
+{% block js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const removeBtn = document.getElementById("btn-remove-image");
+    const removeFlag = document.getElementById("remove_image_flag");
+    const fileInput = document.getElementById("profile-image");
+    const hint = document.getElementById("profile-image-hint");
+    const preview = document.getElementById("profile-image-preview");
+    const previewWrapper = document.getElementById("profile-preview-wrapper");
+    const uploadTrigger = document.getElementById("btn-trigger-upload");
+
+    const setRemoveVisible = (show) => {
+      if (!removeBtn) return;
+      removeBtn.style.display = show ? "" : "none";
+      removeBtn.disabled = !show;
+    };
+
+    const togglePreview = (show) => {
+      if (previewWrapper) previewWrapper.style.display = show ? "block" : "none";
+      if (preview) preview.style.display = show ? "block" : "none";
+    };
+
+    if (removeBtn && removeFlag) {
+      let hasInitial = removeBtn.dataset.has === "1";
+      let initialSrc = preview?.dataset.initialSrc || "";
+      const defaultHint = "No tienes foto de perfil cargada.";
+      let initialHint = hint ? hint.textContent : defaultHint;
+      let hasTempFile = false;
+
+      setRemoveVisible(hasInitial);
+      togglePreview(!!initialSrc);
+
+      const resetToInitial = () => {
+        removeFlag.value = "0";
+        hasTempFile = false;
+        if (preview) {
+          preview.src = initialSrc;
+        }
+        togglePreview(!!initialSrc);
+        setRemoveVisible(hasInitial);
+        if (hint) hint.textContent = hasInitial ? initialHint : defaultHint;
+      };
+
+      removeBtn.addEventListener("click", (ev) => {
+        ev.preventDefault();
+        if (removeBtn.disabled) return;
+
+        if (hasTempFile) {
+          if (fileInput) fileInput.value = "";
+          resetToInitial();
+          return;
+        }
+
+        if (!hasInitial) return;
+
+        Swal.fire({
+          icon: "question",
+          title: "Eliminar la foto de perfil?",
+          showCancelButton: true,
+          confirmButtonText: "Si, eliminar",
+          cancelButtonText: "Cancelar",
+        }).then((res) => {
+          if (!res.isConfirmed) return;
+          removeFlag.value = "1";
+          hasInitial = false;
+          initialSrc = "";
+          initialHint = defaultHint;
+          if (fileInput) fileInput.value = "";
+          if (preview) preview.src = "";
+          togglePreview(false);
+          setRemoveVisible(false);
+          if (hint) hint.textContent = "Se eliminara la foto al guardar.";
+        });
+      });
+
+      if (fileInput) {
+        fileInput.addEventListener("change", () => {
+          if (fileInput.files && fileInput.files.length) {
+            hasTempFile = true;
+            removeFlag.value = "0";
+            setRemoveVisible(true);
+            if (hint) hint.textContent = "Se actualizara la foto al guardar.";
+            if (preview) {
+              const reader = new FileReader();
+              reader.onload = (e) => {
+                preview.src = e.target.result || "";
+                togglePreview(!!preview.src);
+              };
+              reader.onerror = () => {
+                preview.src = "";
+                togglePreview(false);
+              };
+              reader.readAsDataURL(fileInput.files[0]);
+            }
+          } else {
+            resetToInitial();
+          }
+        });
+      }
+    }
+
+    if (uploadTrigger && fileInput) {
+      uploadTrigger.addEventListener("click", (ev) => {
+        ev.preventDefault();
+        fileInput.click();
+      });
+    }
+
+    if (typeof attachNoChangeSweetAlert === "function") {
+      attachNoChangeSweetAlert({
+        form: "#profileForm",
+        message: {
+          title: "No se realizaron cambios.",
+          text: "Modifica alguno de los campos antes de guardar.",
+        },
+        onNoChange: () => {
+          window.location.href = "{% url 'profile' %}";
+        },
+      });
+    }
+
+    const cancelLink = document.getElementById("user-cancel");
+    if (cancelLink && !cancelLink.dataset.bound) {
+      cancelLink.dataset.bound = "1";
+      cancelLink.addEventListener("click", (ev) => {
+        ev.preventDefault();
+        if (typeof Swal === "undefined") {
+          window.location.href = cancelLink.href;
+          return;
+        }
+        Swal.fire({
+          icon: "question",
+          title: "¿Estas seguro que no quiere editar su perfil?",
+          showCancelButton: true,
+          confirmButtonText: "Sí, salir",
+          cancelButtonText: "Seguir aquí",
+        }).then((res) => {
+          if (res.isConfirmed) window.location.href = cancelLink.href;
+        });
+      });
+    }
+  });
+</script>
+{% endblock %}

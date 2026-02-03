@@ -1,0 +1,127 @@
+{% extends "partials/layouts/main.html" %}
+{% load static %}
+
+{% include "partials/main.html" %}
+
+{% block meta %}
+{% with title="Administración - Nuevo Tipo Documento" %}
+{% include "partials/title-meta.html" %}
+{% endwith %}
+{% endblock %}
+
+{% block content %}
+{% with title_sub="Administrador" title="Crear tipo documento" breadcrumb_parent="Tipo de documento" %}
+{% include "partials/pagetitle.html" %}
+{% endwith %}
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form id="tipoDocForm" method="post" novalidate>
+            {% csrf_token %}
+            <div class="row g-3 align-items-end">
+                <div class="col-12 col-lg-3 position-relative mb-4">
+                    <label class="form-label">Tipo de documento <span class="text-danger">*</span></label>
+                    {{ form.nombre }}
+                    {% if form.nombre.errors %}
+                        {% for error in form.nombre.errors %}
+                        <small class="text-danger position-absolute" style="top: 100%; left: 0.75rem; font-size: 0.75rem; white-space: nowrap;">
+                            {{ error }}
+                        </small>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div class="col-12 col-lg-3 mb-4">
+                    <label class="form-label">Creado por</label>
+                    <input type="text" class="form-control form-control-sm"
+                        value="{{ request.user.get_full_name|default:request.user.username }}" readonly>
+                </div>
+
+                <div class="col-12 col-lg-3 position-relative mb-4">
+                    <label class="form-label">Fecha creación</label>
+                    {{ form.fecha_creacion }}
+                    {% if form.fecha_creacion.errors %}
+                        {% for error in form.fecha_creacion.errors %}
+                        <small class="text-danger position-absolute" style="top: 100%; left: 0.75rem; font-size: 0.75rem; white-space: nowrap;">
+                            {{ error }}
+                        </small>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 mt-2">
+                <button type="submit" class="btn btn-primary px-4">Guardar</button>
+                <a href="{% url 'admin_tipo_documento' %}" class="btn btn-outline-secondary px-4"
+                    id="tipoDocCancelar">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.getElementById('tipoDocForm');
+        if (form && !form.dataset.bound) {
+            form.dataset.bound = '1';
+            form.addEventListener('submit', () => {
+                const fechaInput = form.querySelector('[name="fecha_creacion"]');
+                if (fechaInput && fechaInput.value) {
+                    const match = fechaInput.value.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+                    if (match) {
+                        const [, d, m, y] = match;
+                        fechaInput.value = `${y}-${m}-${d}`;
+                    }
+                }
+            });
+        }
+
+        const cancel = document.getElementById('tipoDocCancelar');
+        if (cancel) {
+            cancel.addEventListener('click', (ev) => {
+                ev.preventDefault();
+                if (typeof Swal === 'undefined') {
+                    if (confirm('¿Quieres salir sin crear el Tipo de Documento?')) {
+                        window.location.href = cancel.href;
+                    }
+                    return;
+                }
+                Swal.fire({
+                    icon: 'question',
+                    title: '¿Seguro que no quieres crear un Tipo de Documento?',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, salir',
+                    cancelButtonText: 'Seguir editando',
+                    confirmButtonColor: '#00854d'
+                }).then(res => {
+                    if (res.isConfirmed) window.location.href = cancel.href;
+                });
+            });
+        }
+
+        // Lógica de Errores corregida (sin espacios en |length)
+        {% if form.errors %}
+            {% if form.errors|length == 1 and form.nombre.errors %}
+            Swal.fire({
+                icon: 'error',
+                title: 'Error en el Nombre',
+                text: '{{ form.nombre.errors.0|escapejs }}',
+                confirmButtonText: 'Entendido',
+                confirmButtonColor: '#00854d'
+            });
+            {% else %}
+            Swal.fire({
+                icon: 'error',
+                title: 'Error de validación',
+                text: 'Existe un error en el formulario ({{ form.errors|length }} errores). Por favor revisa los campos en rojo.',
+                confirmButtonText: 'Entendido',
+                confirmButtonColor: '#00854d'
+            });
+            {% endif %}
+        {% endif %}
+    });
+</script>
+{% endblock %}

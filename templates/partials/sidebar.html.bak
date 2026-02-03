@@ -1,0 +1,131 @@
+{% load i18n %}
+
+<aside class="pe-app-sidebar" id="sidebar">
+    <div class="pe-app-sidebar-logo px-6 d-flex align-items-center position-relative">
+        <a href="{% url 'home' %}" class="d-flex align-items-center logo-main text-decoration-none">
+            <img height="35" width="34" class="logo-dark" alt="{% trans 'Logo' %}" src="/static/assets/images/logo-md.png">
+            <h5 class="fw-bold mb-0 ms-2 text-white sidebar-title" style="font-size: 18px; line-height: 1.2; display: none;">House Construcción</h5>
+        </a>
+    </div>
+    
+    <nav class="pe-app-sidebar-menu nav nav-pills" data-simplebar id="sidebar-simplebar">
+        <div class="d-flex align-items-start flex-column w-100">
+            <ul class="pe-main-menu list-unstyled">
+
+                <!-- Dashboard -->
+                <li class="pe-slide">
+                    <a href="{% url 'home' %}" class="pe-nav-link">
+                        <i class="ri-dashboard-line pe-nav-icon"></i>
+                        <span class="pe-nav-content">{% trans "Dashboard" %}</span>
+                    </a>
+                </li>
+
+                <!-- Rendición de gastos -->
+                <li class="pe-slide pe-has-sub">
+                    <a href="#collapseGastos" class="pe-nav-link" data-bs-toggle="collapse" aria-expanded="false" aria-controls="collapseGastos">
+                        <i class="ri-money-dollar-circle-line pe-nav-icon"></i>
+                        <span class="pe-nav-content">{% trans "Rendición de gastos" %}</span>
+                        <i class="ri-arrow-down-s-line pe-nav-arrow"></i>
+                    </a>
+                    <ul class="pe-slide-menu collapse" id="collapseGastos">
+                        <li class="pe-slide-item">
+                            <a href="#" class="pe-nav-link">{% trans "Ingresar gastos" %}</a>
+                        </li>
+                        <li class="pe-slide-item">
+                            <a href="#" class="pe-nav-link">{% trans "Ver gastos" %}</a>
+                        </li>
+                    </ul>
+                </li>
+
+                <!-- Libro de Obras -->
+                <li class="pe-slide pe-has-sub">
+                    <a href="#collapseLibroObras" class="pe-nav-link" data-bs-toggle="collapse" aria-expanded="false" aria-controls="collapseLibroObras">
+                        <i class="ri-building-line pe-nav-icon"></i>
+                        <span class="pe-nav-content">{% trans "Libro de Obras" %}</span>
+                        <i class="ri-arrow-down-s-line pe-nav-arrow"></i>
+                    </a>
+                    <ul class="pe-slide-menu collapse" id="collapseLibroObras">
+                        <li class="pe-slide-item">
+                            <a href="#" class="pe-nav-link">{% trans "Ingresar registro" %}</a>
+                        </li>
+                        <li class="pe-slide-item">
+                            <a href="#" class="pe-nav-link">{% trans "Ver registros" %}</a>
+                        </li>
+                    </ul>
+                </li>
+
+                <!-- Estadística -->
+                <li class="pe-slide pe-has-sub">
+                    <a href="#collapseEstadistica" class="pe-nav-link" data-bs-toggle="collapse" aria-expanded="false" aria-controls="collapseEstadistica">
+                        <i class="ri-bar-chart-box-line pe-nav-icon"></i>
+                        <span class="pe-nav-content">{% trans "Estadística" %}</span>
+                        <i class="ri-arrow-down-s-line pe-nav-arrow"></i>
+                    </a>
+                    <ul class="pe-slide-menu collapse" id="collapseEstadistica">
+                        <li class="pe-slide-item">
+                            <a href="#" class="pe-nav-link">{% trans "Por Gastos" %}</a>
+                        </li>
+                        <li class="pe-slide-item">
+                            <a href="#" class="pe-nav-link">{% trans "Por Avances por obra" %}</a>
+                        </li>
+                    </ul>
+                </li>
+
+                <!-- Administraciónn -->
+                <li class="pe-slide pe-has-sub">
+                    <a href="#collapseAdministraciónn" class="pe-nav-link" data-bs-toggle="collapse" aria-expanded="false" aria-controls="collapseAdministraciónn">
+                        <i class="ri-settings-3-line pe-nav-icon"></i>
+                        <span class="pe-nav-content">{% trans "Administraciónn" %}</span>
+                        <i class="ri-arrow-down-s-line pe-nav-arrow"></i>
+                    </a>
+                    <ul class="pe-slide-menu collapse" id="collapseAdministraciónn">
+                        <li class="pe-slide-item">
+                            <a href="{% url 'admin_users' %}" class="pe-nav-link" target="_blank">
+                                {% trans "Usuarios" %}
+                            </a>
+                        </li>
+                        <li class="pe-slide-item pe-has-sub">
+                            <a href="#collapseAdminGastos" class="pe-nav-link" data-bs-toggle="collapse" aria-expanded="false" aria-controls="collapseAdminGastos">
+                                {% trans "Gastos" %}
+                                <i class="ri-arrow-down-s-line pe-nav-arrow ms-auto"></i>
+                            </a>
+                            <ul class="pe-slide-menu collapse" id="collapseAdminGastos">
+                                <li class="pe-slide-item">
+                                    <a href="#" class="pe-nav-link">{% trans "Categorías" %}</a>
+                                </li>
+                                <li class="pe-slide-item">
+                                    <a href="#" class="pe-nav-link">{% trans "Proveedores" %}</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="pe-slide-item">
+                            <a href="#" class="pe-nav-link">{% trans "Libro Obras" %}</a>
+                        </li>
+                        <li class="pe-slide-item pe-has-sub">
+                            <a href="#collapseAdminObras" class="pe-nav-link" data-bs-toggle="collapse" aria-expanded="false" aria-controls="collapseAdminObras">
+                                {% trans "Obras" %}
+                                <i class="ri-arrow-down-s-line pe-nav-arrow ms-auto"></i>
+                            </a>
+                            <ul class="pe-slide-menu collapse" id="collapseAdminObras">
+                                <li class="pe-slide-item">
+                                    <a href="#" class="pe-nav-link">{% trans "Nueva" %}</a>
+                                </li>
+                                <li class="pe-slide-item">
+                                    <a href="#" class="pe-nav-link">{% trans "Editar" %}</a>
+                                </li>
+                                <li class="pe-slide-item">
+                                    <a href="#" class="pe-nav-link">{% trans "Ciudad" %}</a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </nav>
+</aside>
+<div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+<!-- Sidebar End -->
+
+

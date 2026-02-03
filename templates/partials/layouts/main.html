@@ -1,0 +1,92 @@
+{% load i18n static %}
+
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="light">
+<head>
+
+    <!-- Meta base -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    {% block meta %}{% endblock meta %}
+
+    <!-- CSS principal -->
+    {% include "partials/head-css.html" %}
+
+    {% block css %}{% endblock css %}
+
+</head>
+<body>
+
+<div id="layout-wrapper">
+
+    <!-- Header -->
+    {% include "partials/header.html" %}
+
+    <!-- Sidebar -->
+    {% with current_url=request.resolver_match.url_name %}
+        {% include "partials/sidebar.html" %}
+    {% endwith %}
+
+    <!-- Contenido principal -->
+    <main class="app-wrapper">
+        <div class="container-fluid py-3">
+            {% block content %}{% endblock content %}
+        </div>
+    </main>
+
+    <!-- Footer -->
+    {% include "partials/footer-login.html" %}
+
+</div>
+
+<!-- JS vendor -->
+{% include "partials/vendor-scripts.html" %}
+
+{% block js %}{% endblock js %}
+
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const theme = document.documentElement.getAttribute("data-bs-theme") || "light";
+    document.documentElement.setAttribute("data-bs-theme", theme);
+});
+</script>
+<style>
+audio,
+video {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    opacity: 0 !important;
+}
+audio::-webkit-media-controls,
+audio::-webkit-media-controls-enclosure,
+video::-webkit-media-controls,
+video::-webkit-media-controls-enclosure {
+    display: none !important;
+}
+
+.form-unificado .form-control,
+.form-unificado .form-select {
+    height: 46px;
+    font-size: 15.5px;
+    padding: 10px 14px;
+}
+
+.form-unificado textarea.form-control {
+    min-height: 90px;
+}
+
+.form-unificado .form-label {
+    font-size: 14.5px;
+    font-weight: 500;
+}
+
+.form-unificado .btn {
+    height: 42px;
+    font-size: 14.5px;
+}
+</style>
+</body>
+</html>

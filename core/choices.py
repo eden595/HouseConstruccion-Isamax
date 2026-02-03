@@ -1,0 +1,25 @@
+#Opciones reutilizables en todo el proyecto.
+
+ESTADO_ACTIVO = 1
+ESTADO_INACTIVO = 0
+
+ESTADO_CHOICES = (
+    (ESTADO_ACTIVO, "Activo"),
+    (ESTADO_INACTIVO, "Inactivo")
+)
+
+ESTADO_GASTO_ACTIVO = True
+ESTADO_GASTO_INACTIVO = False
+
+ESTADO_GASTO_CHOICES = (
+    (ESTADO_GASTO_ACTIVO, "Activo"),
+    (ESTADO_GASTO_INACTIVO, "Inactivo")
+)
+
+TIPO_ARCHIVO_IMAGEN = "imagen"
+TIPO_ARCHIVO_VIDEO = "video"
+
+TIPO_ARCHIVO_CHOICES = (
+    (TIPO_ARCHIVO_IMAGEN, "Imagen"),
+    (TIPO_ARCHIVO_VIDEO, "Video")
+)

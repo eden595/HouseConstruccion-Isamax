@@ -1,0 +1,42 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es" class="h-100">
+
+<head>
+
+    {# --- Meta dinámicos (título, SEO, etc.) --- #}
+    {% block meta %}{% endblock meta %}
+
+    {# --- CSS específico de cada vista (login/signup) --- #}
+    {% block css %}{% endblock css %}
+
+    {# --- CSS global del proyecto (Bootstrap, theme, etc.) --- #}
+    {% include "partials/head-css.html" %}
+
+    {# --- TU CSS PERSONALIZADO --- #}
+    <link rel="stylesheet" href="{% static 'assets/css/style.css' %}">
+
+    {# --- ESTILOS PARA LOGIN/REGISTRO --- #}
+    <link rel="stylesheet" href="{% static 'assets/css/auth.css' %}?v=1.12">
+</head>
+
+<body class="auth-bg">
+
+    <!-- HEADER ESPECIAL PARA LOGIN/REGISTRO -->
+    {% block auth_header %}
+        {% include "partials/auth-header.html" %}
+    {% endblock %}
+
+    <main class="auth-wrapper">
+        <div class="container">
+            {% block content %}
+            {% endblock content %}
+        </div>
+        {% block footer %}{% endblock footer %}
+    </main>
+
+    {% include "partials/vendor-scripts.html" %}
+    {% block js %}{% endblock js %}
+
+</body>
+</html>

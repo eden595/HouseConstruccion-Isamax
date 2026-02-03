@@ -1,0 +1,185 @@
+﻿{% extends "partials/layouts/main.html" %}
+{% load static %}
+
+{% include "partials/main.html" %}
+
+{% block meta %}
+  {% with title="Perfil" %}
+    {% include "partials/title-meta.html" %}
+  {% endwith %}
+{% endblock %}
+
+{% block css %}
+  <style>
+    .profile-role-badge {
+      font-size: 12px;
+      font-weight: 600;
+      padding-inline: 10px;
+      padding-block: 3px;
+      border-radius: 999px;
+      text-transform: capitalize;
+      border: 1px solid transparent;
+    }
+    html[data-bs-theme="light"] .profile-role-badge {
+      background: #eef2ff;
+      color: #4338ca;
+      border-color: #d8def8;
+    }
+    html[data-bs-theme="dark"] .profile-role-badge {
+      background: #1a1b2e;
+      color: #e0e7ff;
+      border-color: rgba(255, 255, 255, 0.12);
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  {% with title_sub="Inicio" title="Perfil" %}
+    {% include "partials/pagetitle.html" %}
+  {% endwith %}
+
+<div class="d-flex justify-content-start mb-3">
+  <a href="{% url 'home' %}" class="text-decoration-none d-inline-flex align-items-center" style="font-weight: 500; font-size: 14px; color: #4f46e5;">
+    <i class="ri-arrow-left-line me-1" style="font-size: 16px;"></i>
+    <span>Volver al inicio</span>
+  </a>
+</div>
+
+<div class="pages-profile"></div>
+
+<div class="card profile-main-card border-0 mb-4 shadow-sm">
+  <div class="card-body px-4 px-lg-5 py-4">
+    <div class="d-flex flex-column flex-md-row align-items-md-center gap-4">
+      <div class="profile-avatar-wrapper position-relative">
+        {% if profile.image %}
+        <img src="{{ profile.image.url }}" alt="Avatar" class="profile-avatar-lg rounded-circle border" style="width:96px;height:96px;object-fit:cover;border-color:#e1e3f0;">
+        {% else %}
+        <img src="{% static 'assets/images/avatar/avatar-3.jpg' %}" alt="Avatar" class="profile-avatar-lg rounded-circle border" style="width:96px;height:96px;object-fit:cover;border-color:#e1e3f0;">
+        {% endif %}
+        <span class="profile-status-dot position-absolute" style="bottom:6px;right:8px;width:14px;height:14px;border-radius:999px;background:#22c55e;border:2px solid #fff;"></span>
+      </div>
+
+      <div class="flex-grow-1">
+        <h3 class="mb-1 d-flex flex-wrap align-items-center gap-2">
+          {% if request.user.first_name or request.user.last_name %} {{ request.user.first_name }} {{ request.user.last_name }} {% else %} {{ request.user.username }} {% endif %} {% with request.user.groups.first as main_group %} {% if main_group %}
+          <span class="badge rounded-pill profile-role-badge"> {{ main_group.name }} </span>
+          {% endif %} {% endwith %}
+        </h3>
+
+        <div class="text-muted mb-1 d-flex align-items-center gap-2">
+          <i class="ri-user-3-line me-1 align-middle"></i>
+          <span class="small">{{ request.user.username }}</span>
+        </div>
+
+        <div class="text-muted d-flex align-items-center gap-2">
+          <i class="ri-mail-line me-1 align-middle"></i>
+          <span class="small">{{ request.user.email|default:"Sin correo" }}</span>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="row g-0 align-items-stretch">
+  <div class="col-12">
+    <div class="card mb-4 shadow-sm profile-form-card w-100 h-100" style="margin-bottom:0;">
+      <div class="card-header border-0 pb-0 d-flex justify-content-between align-items-center" style="background: transparent;">
+        <div>
+          <div class="profile-section-title text-uppercase" style="font-size: 13px; letter-spacing: .08em;">Perfil</div>
+          <h4 class="card-title mb-0" style="font-size: 20px; font-weight: 700;">Datos personales</h4>
+        </div>
+
+      </div>
+
+      <div class="card-body" style="font-size: 15px;">
+        <div class="row g-3 align-items-stretch">
+          <div class="col-12 col-md-4">
+            <label class="text-muted small mb-1" style="font-size: 13px;">Nombre completo</label>
+            <div class="profile-info-box fw-semibold">
+              {% if request.user.first_name or request.user.last_name %} {{ request.user.first_name }} {{ request.user.last_name }} {% else %} {{ request.user.username }} {% endif %}
+            </div>
+          </div>
+
+          <div class="col-12 col-md-4">
+            <label class="text-muted small mb-1" style="font-size: 13px;">Usuario</label>
+            <div class="profile-info-box fw-semibold">
+              {{ request.user.username }}
+            </div>
+          </div>
+
+          <div class="col-12 col-md-4">
+            <label class="text-muted small mb-1" style="font-size: 13px;">Correo electrónico</label>
+            <div class="profile-info-box fw-semibold">
+              {{ request.user.email|default:"Sin correo registrado" }}
+            </div>
+          </div>
+
+          <div class="col-12 col-md-4">
+            <label class="text-muted small mb-1" style="font-size: 13px;">Teléfono</label>
+            <div class="profile-info-box fw-semibold">
+              {{ profile.phone|default:"Sin teléfono registrado" }}
+            </div>
+          </div>
+
+          <div class="col-12 col-md-4">
+            <label class="text-muted small mb-1" style="font-size: 13px;">Rol</label>
+            <div class="profile-info-box fw-semibold">
+              {% with request.user.groups.first as main_group %} {% if main_group %} {{ main_group.name }} {% else %} Sin rol {% endif %} {% endwith %}
+            </div>
+          </div>
+
+          <div class="col-12 col-md-4">
+            <label class="text-muted small mb-1" style="font-size: 13px;">Cuenta creada</label>
+            <div class="profile-info-box fw-semibold">
+              {{ request.user.date_joined|date:"d/m/Y" }}
+            </div>
+          </div>
+        </div>
+        <div class="mt-4 d-flex gap-2">
+          <a href="{% url 'edit_profile' %}" class="btn btn-primary px-4 fw-semibold" style="border-radius:4px;background:#ff7a18;font-weight:600;">
+            Editar datos
+          </a>
+          <a href="{% url 'change_password' %}" class="btn btn-outline-secondary px-4 fw-semibold" style="border-radius:4px;">
+            Cambiar contraseña
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}
+
+{% block js %}
+<script src="{% static 'assets/libs/dropzone/dropzone-min.js' %}"></script>
+<script src="{% static 'assets/libs/air-datepicker/air-datepicker.js' %}"></script>
+<script src="{% static 'assets/libs/choices.js/public/assets/scripts/choices.min.js' %}"></script>
+<script src="{% static 'assets/js/form/file-upload.init.js' %}"></script>
+<script src="{% static 'assets/js/pages/profile.init.js' %}"></script>
+<script src="{% static 'assets/js/app.js' %}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const djangoMessages = [
+      {% for message in messages %}
+      { level: '{{ message.tags|default:"info" }}', text: '{{ message|escapejs }}' }{% if not forloop.last %},{% endif %}
+      {% endfor %}
+    ];
+    if (typeof Swal !== 'undefined' && djangoMessages.length) {
+      const last = djangoMessages[djangoMessages.length - 1];
+      const lvl = (last.level || '').toLowerCase();
+      const icon = lvl.includes('success') ? 'success' : lvl.includes('error') ? 'error' : lvl.includes('warning') ? 'warning' : 'info';
+      const defaultText = lvl.includes('info') ? 'No modificaste ningún dato.' : undefined;
+      Swal.fire({
+        icon,
+        title: last.text || (icon === 'success' ? 'Perfil actualizado correctamente.' : 'Información'),
+        text: last.text ? defaultText : defaultText,
+        position: 'center',
+        toast: false,
+        showConfirmButton: false,
+        timer: 1800
+      });
+    }
+  });
+</script>
+{% endblock js %}

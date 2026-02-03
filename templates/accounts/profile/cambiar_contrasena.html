@@ -1,0 +1,169 @@
+{% extends "partials/layouts/master_auth.html" %}
+{% load static %}
+
+{% block auth_header %}{% endblock %}
+
+{% block meta %}
+  {% with title="Cambiar contraseña" %}
+    {% include "partials/title-meta.html" %}
+  {% endwith %}
+{% endblock %}
+
+{% block content %}
+  <div class="d-flex align-items-center justify-content-center min-vh-100 py-5">
+    <div class="col-12 col-md-9 col-lg-6 col-xl-4">
+      <div class="card mx-auto auth-card shadow">
+        <div class="card-body p-8">
+          <div class="auth-card-hero mb-4 text-center">
+            <img src="{% static 'assets/images/logo-md.png' %}" alt="Logo House Construccion" class="auth-card-logo" />
+            <div class="auth-card-brand">
+              <span>House</span>
+              <span>Construccion</span>
+            </div>
+          </div>
+
+          <h3 class="fw-medium text-center mb-1">Actualiza tu contraseña</h3>
+          <p class="text-center text-muted mb-6">Ingresa tu contraseña actual y elige una nueva para mantener tu cuenta segura.</p>
+
+          <form id="changePasswordForm" method="post" class="mt-4" novalidate>
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+              <div class="alert alert-danger text-center py-2">
+                {{ form.non_field_errors }}
+              </div>
+            {% endif %}
+
+            <div class="mb-3">
+              <label class="form-label form-label-sm fw-semibold">Contraseña actual <span class="text-danger">*</span></label>
+              <div class="input-group input-group-merge">
+                {{ form.old_password }}
+                <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordField('id_old_password', this)" aria-label="Mostrar contraseña">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
+              {% for error in form.old_password.errors %}
+                <div class="invalid-feedback d-block">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label form-label-sm fw-semibold">Nueva contraseña <span class="text-danger">*</span></label>
+              <div class="input-group input-group-merge">
+                {{ form.new_password1 }}
+                <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordField('id_new_password1', this)" aria-label="Mostrar contraseña">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
+              {% for error in form.new_password1.errors %}
+                <div class="invalid-feedback d-block">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label form-label-sm fw-semibold">Confirmar nueva contraseña <span class="text-danger">*</span></label>
+              <div class="input-group input-group-merge">
+                {{ form.new_password2 }}
+                <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordField('id_new_password2', this)" aria-label="Mostrar contraseña">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
+              {% for error in form.new_password2.errors %}
+                <div class="invalid-feedback d-block">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 mb-3" id="savePasswordBtn">Guardar nueva contraseña</button>
+            <a href="{% url 'profile' %}" class="btn btn-outline-secondary w-100" id="cancelPasswordBtn">Cancelar</a>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block js %}
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    (function () {
+      window.togglePasswordField = (fieldId, btn) => {
+        const input = document.getElementById(fieldId);
+        if (!input) return;
+        const isPassword = input.type === "password";
+        input.type = isPassword ? "text" : "password";
+        const icon = btn?.querySelector("i");
+        if (icon) icon.className = isPassword ? "bi bi-eye-slash" : "bi bi-eye";
+        btn?.setAttribute("aria-label", isPassword ? "Ocultar contraseña" : "Mostrar contraseña");
+      };
+
+      const form = document.getElementById("changePasswordForm");
+      const cancelBtn = document.getElementById("cancelPasswordBtn");
+      const saveBtn = document.getElementById("savePasswordBtn");
+
+      const showConfirmation = (message, confirmButtonText = "Aceptar") => {
+        return Swal.fire({
+          icon: "warning",
+          title: "¿Estás seguro?",
+          text: message,
+          confirmButtonText: confirmButtonText,
+          showCancelButton: confirmButtonText !== null,
+          cancelButtonText: "Cancelar",
+          reverseButtons: true,
+        });
+      };
+
+      const notify = (icon, title, text) => {
+        return Swal.fire({
+          icon,
+          title,
+          text,
+          confirmButtonColor: "#ff7a18",
+        });
+      };
+
+      cancelBtn?.addEventListener("click", (event) => {
+        event.preventDefault();
+        showConfirmation("¿Deseas salir sin cambiar la contraseña?", "Salir").then((result) => {
+          if (result.isConfirmed) {
+            window.location.href = cancelBtn.getAttribute("href");
+          }
+        });
+      });
+
+      form?.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (!form) return;
+        saveBtn?.setAttribute("disabled", "disabled");
+        const endpoint = form.getAttribute("action") || window.location.href;
+        const formData = new FormData(form);
+        try {
+          const response = await fetch(endpoint, {
+            method: "POST",
+            headers: {
+              "X-Requested-With": "XMLHttpRequest",
+              "X-CSRFToken": formData.get("csrfmiddlewaretoken"),
+            },
+            body: formData,
+          });
+          const data = await response.json();
+          if (response.ok && data.success) {
+            await notify("success", "Contraseña actualizada", data.message || "Contraseña actualizada con éxito.");
+            window.location.href = data.redirect || "{% url 'profile' %}";
+            return;
+          }
+          throw data;
+        } catch (error) {
+          const message =
+            (error && error.message) ||
+            "Ocurrió un error. Revisa los datos e intenta de nuevo.";
+          await notify("error", "Error", message);
+        } finally {
+          saveBtn?.removeAttribute("disabled");
+        }
+      });
+    })();
+  </script>
+{% endblock %}
+
+{% block footer %}
+  {% include "partials/footer-login.html" %}
+{% endblock %}

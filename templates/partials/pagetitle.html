@@ -1,0 +1,29 @@
+{# templates/partials/pagetitle.html #}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+
+    {# Título principal #}
+    <div>
+        <h4 class="mb-1 fw-semibold">
+            {{ title }}
+        </h4>
+    </div>
+
+    {# Breadcrumb derecha #}
+    <div class="text-muted" style="font-size: 13px;">
+        {% if breadcrumb_parent %}
+            <span>{{ breadcrumb_parent }}</span>
+            {% if breadcrumb_child %}
+                <span class="mx-1">›</span>
+                <span>{{ breadcrumb_child }}</span>
+            {% endif %}
+            <span class="mx-1">›</span>
+            <span class="fw-semibold">{{ title }}</span>
+        {% else %}
+            <span>{{ title_sub }}</span>
+            <span class="mx-1">›</span>
+            <span class="fw-semibold">{{ title }}</span>
+        {% endif %}
+    </div>
+
+</div>

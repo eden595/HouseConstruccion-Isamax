@@ -1,0 +1,236 @@
+﻿{% extends "partials/layouts/main.html" %}
+{% load static %}
+
+{% include "partials/main.html" %}
+
+{% block meta %}
+    {% with title="Administración - Usuarios" %}
+        {% include "partials/title-meta.html" %}
+    {% endwith %}
+{% endblock %}
+
+{% block css %}
+    <link href="{% static 'css/jquery.dataTables.min.css' %}" rel="stylesheet" />
+    <link href="{% static 'css/responsive.dataTables.min.css' %}" rel="stylesheet" />
+    <style>
+        .table td, .table th {
+            padding: 0.5rem 0.75rem;
+            vertical-align: middle;
+        }
+        @media (max-width: 768px) {
+            .table { font-size: 0.9rem; }
+            .btn, .form-control, .form-select { font-size: 0.9rem; }
+        }
+        @media (max-width: 480px) {
+            .table { font-size: 0.85rem; }
+        }
+        .status-badge { padding: 6px 12px; min-width: 80px; text-align: center; }
+    </style>
+{% endblock css %}
+
+{% block content %}
+    {% with title_sub="Administrador" title="Usuarios" %}
+        {% include "partials/pagetitle.html" %}
+    {% endwith %}
+
+    <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3 mb-3">
+        <a href="{% url 'admin_users_create' %}" class="btn btn-success text-nowrap px-3">
+            <i class="bi bi-plus-lg me-1"></i> Nuevo Usuario
+        </a>
+        <div class="d-flex align-items-center gap-2" style="max-width: 320px; width: 100%;">
+            <label for="searchUser" class="mb-0 small text-muted">Buscar:</label>
+            <input
+                type="text"
+                id="searchUser"
+                name="q"
+                value="{{ q|default:'' }}"
+                class="form-control form-control-sm"
+                placeholder="Usuario, correo o rol"
+                style="max-width: 200px;"
+            >
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+
+            <div class="d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center gap-2 mb-3">
+                <label class="mb-0 small text-muted">Mostrar</label>
+                <select id="customLength" class="form-select form-select-sm w-100 w-sm-auto" style="max-width: 140px;" aria-label="Cantidad de registros a mostrar">
+                    <option value="10" selected>10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="-1">Todos</option>
+                </select>
+                <span class="small text-muted">registros</span>
+            </div>
+
+            <div class="table-responsive">
+                <table id="table_users" class="table align-middle table-striped mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Usuario</th>
+                            <th scope="col">Correo</th>
+                            <th scope="col">Rol</th>
+                            <th scope="col">Estado</th>
+                            <th scope="col">Fecha creación</th>
+                            <th scope="col">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in usuarios %}
+                        <tr data-user-row="{{ u.id }}" data-fecha-creacion="{{ u.date_joined|date:'Y-m-d' }}">
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ u.username }}</td>
+                            <td>{{ u.email }}</td>
+                            <td>
+                                {% with roles=u.groups.all %}
+                                    {% if roles %}
+                                        {{ roles|join:", " }}
+                                    {% else %}
+                                        Sin rol
+                                    {% endif %}
+                                {% endwith %}
+                            </td>
+                            <td class="status-cell">
+                                {% if u.is_active %}
+                                    <span class="badge bg-success status-badge">Activo</span>
+                                {% else %}
+                                    <span class="badge bg-secondary status-badge">Inactivo</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ u.date_joined|date:"d/m/Y" }}</td>
+                            <td>
+                                <div class="d-flex gap-2 align-items-center">
+                                    <a class="btn btn-sm btn-action-edit" href="{% url 'admin_users_edit' u.id %}">Editar</a>
+                                    <form method="post" action="{% url 'admin_users_toggle' u.id %}" class="d-inline toggle-form" data-active="{% if u.is_active %}1{% else %}0{% endif %}">
+                                        {% csrf_token %}
+                                        {% if u.is_active %}
+                                            <button type="submit" class="btn btn-sm btn-action-inactive toggle-btn">Desactivar</button>
+                                        {% else %}
+                                            <button type="submit" class="btn btn-sm btn-action-active toggle-btn">Activar</button>
+                                        {% endif %}
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script type="application/javascript">
+        const table = new DataTable('#table_users', {
+            language: {
+                url: '{% static 'json/es-CL.json' %}',
+            },
+            dom: 'rtip',
+            columnDefs: [
+                { searchable: false, targets: [0,4,6] },
+                { orderable: false, targets: [0,6] }
+            ],
+        });
+
+        const searchInput = document.getElementById('searchUser');
+        if (searchInput) {
+            searchInput.addEventListener('keyup', () => {
+                table.search(searchInput.value.trim()).draw();
+            });
+        }
+
+        const adjustTable = () => {
+            table.columns.adjust();
+        };
+        window.addEventListener('resize', adjustTable);
+        setTimeout(adjustTable, 100);
+
+        // Mensajes Django -> SweetAlert
+    const djangoMessages = [
+      {% for message in messages %}
+      { level: '{{ message.tags|default:"info" }}', text: '{{ message|escapejs }}' }{% if not forloop.last %},{% endif %}
+      {% endfor %}
+    ];
+    if (djangoMessages.length && typeof Swal !== 'undefined') {
+        const last = djangoMessages[djangoMessages.length - 1];
+        const lvl = (last.level || '').toLowerCase();
+        const icon = lvl.includes('success') ? 'success' : lvl.includes('error') ? 'error' : lvl.includes('warning') ? 'warning' : 'info';
+        const defaultText = lvl.includes('info') ? 'No modificaste ningún dato.' : undefined;
+        let title = last.text || 'Información';
+        if (lvl.includes('success')) {
+            title = 'Usuario ha sido actualizado correctamente.';
+        }
+        Swal.fire({
+            icon,
+            title,
+            text: defaultText,
+            position: 'center',
+            toast: false,
+            showConfirmButton: false,
+            timer: 1800
+        });
+    }
+
+        // Normaliza/guarda fecha de creación y muestra en lista
+        try {
+            const dateStore = JSON.parse(localStorage.getItem('hc_users_dates') || '{}');
+            document.querySelectorAll('tr[data-user-row]').forEach(row => {
+                const uid = row.dataset.userRow;
+                const cell = row.querySelector('td:nth-child(6)');
+                if (!uid || !cell) return;
+                const serverDate = row.dataset.fechaCreacion || '';
+                const stored = dateStore[uid] || serverDate;
+                if (stored) {
+                    dateStore[uid] = stored;
+                    let f = stored;
+                    if (/^\\d{4}-\\d{2}-\\d{2}$/.test(stored)) {
+                        const [y,m,d] = stored.split('-');
+                        f = `${d}/${m}/${y}`;
+                    }
+                    cell.textContent = f;
+                }
+            });
+            localStorage.setItem('hc_users_dates', JSON.stringify(dateStore));
+        } catch (e) {}
+
+        document.querySelectorAll('.toggle-form').forEach(form => {
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = form.querySelector('.toggle-btn');
+                const row = form.closest('tr');
+                const badge = row.querySelector('.status-badge');
+                const csrf = form.querySelector('input[name="csrfmiddlewaretoken"]')?.value;
+                if (!btn || !badge || !csrf) return;
+                btn.disabled = true;
+                try {
+                    const res = await fetch(form.action, {
+                        method: 'POST',
+                        headers: {'X-CSRFToken': csrf, 'X-Requested-With': 'XMLHttpRequest'},
+                    });
+                    if (!res.ok) throw new Error('Error al actualizar');
+                    const activeNow = form.dataset.active === '0';
+                    form.dataset.active = activeNow ? '1' : '0';
+                    badge.textContent = activeNow ? 'Activo' : 'Inactivo';
+                    badge.classList.toggle('bg-success', activeNow);
+                    badge.classList.toggle('bg-secondary', !activeNow);
+                    btn.textContent = activeNow ? 'Desactivar' : 'Activar';
+                    btn.classList.toggle('btn-desactivar', activeNow);
+                    btn.classList.toggle('btn-activar', !activeNow);
+                    Swal.fire({ icon: 'success', title: `Estado ${activeNow ? 'activado' : 'desactivado'}`, timer: 1200, showConfirmButton: false });
+                } catch (err) {
+                    Swal.fire({ icon: 'error', title: 'No se pudo actualizar', text: err.message || 'Inténtalo nuevamente', timer: 1800, showConfirmButton: false });
+                } finally {
+                    btn.disabled = false;
+                }
+            });
+        });
+    </script>
+{% endblock js %}

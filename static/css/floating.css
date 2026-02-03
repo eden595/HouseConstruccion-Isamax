@@ -1,0 +1,35 @@
+.save-float {
+  position: fixed;
+  bottom: 90px;
+  right: 20px;
+  z-index: 999;
+  display: block;
+  width: 90px;
+  height: 35px;
+  border-radius: 50%;
+  background-color: #8FBD56;
+  box-shadow: 2px 2px 3px rgba(0, 0, 0, 0.3);
+  font-size: 15px !important;
+}
+
+.pulse {
+  /* Sin animación */
+}
+
+.back-float {
+  position: fixed;
+  bottom: 90px;
+  right: 120px;
+  z-index: 999;
+  display: block;
+  width: 90px;
+  height: 35px;
+  border-radius: 50%;
+  background-color: #E984B1;
+  box-shadow: 2px 2px 3px rgba(0, 0, 0, 0.3);
+  font-size: 15px !important;
+}
+
+.fila-error {
+  background-color: #fd6262 !important;
+}

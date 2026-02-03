@@ -1,0 +1,236 @@
+{% extends 'partials/layouts/main.html' %}
+{% load i18n %}
+
+{% block title %}
+{% if obra %}Editar Obra{% else %}Nueva Obra{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12 mb-3">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <h4 class="mb-0">{% if obra %}Editar Obra{% else %}Nueva Obra{% endif %}</h4>
+                <nav aria-label="breadcrumb" class="ms-auto">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item"><a href="{% url 'obra_list' %}">Obras</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">
+                            {% if obra %}Editar Obra{% else %}Lista de Obras{% endif %}
+                        </li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <form method="POST" id="obraForm" data-edit-mode="{% if obra %}1{% else %}0{% endif %}">
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger py-2 mb-3">
+                            {{ form.non_field_errors }}
+                        </div>
+                        {% endif %}
+
+                        <div class="row g-3">
+                            <div class="col-12 col-md-4">
+                                <label class="form-label">Nombre de la Obra *</label>
+                                <input type="text" class="form-control form-control-sm" name="nombre"
+                                    value="{{ form.nombre.value|default_if_none:'' }}" required>
+                                {% for error in form.nombre.errors %}
+                                    <small class="text-danger d-block">{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <label class="form-label">Código *</label>
+                                <input type="text" class="form-control form-control-sm" name="codigo"
+                                    value="{{ form.codigo.value|default_if_none:'' }}" required>
+                                {% for error in form.codigo.errors %}
+                                    <small class="text-danger d-block">{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <label class="form-label">Dirección *</label>
+                                <input type="text" class="form-control form-control-sm" name="direccion"
+                                    value="{{ form.direccion.value|default_if_none:'' }}" required>
+                                {% for error in form.direccion.errors %}
+                                    <small class="text-danger d-block">{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mt-2">
+                            <div class="col-12 col-md-4">
+                                <label class="form-label">Ciudad *</label>
+                                <select class="form-select form-select-sm" name="ciudad" required>
+                                    <option value="" {% if not form.ciudad.value %}selected{% endif %}>Seleccione...</option>
+                                    {% for ciudad in ciudades %}
+                                        <option value="{{ ciudad.id }}"
+                                            {% if form.ciudad.value|stringformat:"s" == ciudad.id|stringformat:"s" %}selected{% endif %}>
+                                            {{ ciudad.nombre }} ({{ ciudad.pais.nombre }})
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                {% for error in form.ciudad.errors %}
+                                    <small class="text-danger d-block">{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <label class="form-label">Estado de la Obra *</label>
+                                <select class="form-select form-select-sm" name="estado_obra" required>
+                                    <option value="" {% if not form.estado_obra.value %}selected{% endif %}>Seleccione...</option>
+                                    {% for estado in estados %}
+                                        <option value="{{ estado.id }}"
+                                            {% if form.estado_obra.value|stringformat:"s" == estado.id|stringformat:"s" %}selected{% endif %}>
+                                            {{ estado.nombre }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                {% for error in form.estado_obra.errors %}
+                                    <small class="text-danger d-block">{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <label class="form-label">Fecha Inicio *</label>
+                                <input type="date" class="form-control form-control-sm"
+                                    id="fecha_inicio"
+                                    name="fecha_inicio"
+                                    value="{% if form.is_bound %}{{ form.fecha_inicio.value|default_if_none:'' }}{% else %}{{ form.fecha_inicio.value|date:'Y-m-d' }}{% endif %}"
+                                    required>
+
+                                {% for error in form.fecha_inicio.errors %}
+                                    <small class="text-danger d-block">{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mt-1">
+                            <div class="col-12 col-md-4">
+                                <label class="form-label">Fecha Fin Estimada *</label>
+                                <input type="date" class="form-control form-control-sm"
+                                    id="fecha_fin_estimada"
+                                    name="fecha_fin_estimada"
+                                    value="{% if form.is_bound %}{{ form.fecha_fin_estimada.value|default_if_none:'' }}{% else %}{{ form.fecha_fin_estimada.value|date:'Y-m-d' }}{% endif %}"
+                                    required>
+
+                                {% for error in form.fecha_fin_estimada.errors %}
+                                    <small class="text-danger d-block">{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <label class="form-label">Creado/Modificado Por</label>
+                                <input type="text" class="form-control form-control-sm"
+                                    value="{% if obra %}{{ obra.creado_por.get_full_name|default:obra.creado_por.username }}{% else %}{{ user.get_full_name|default:user.username }}{% endif %}"
+                                    disabled
+                                    style="background-color: #e9ecef; opacity: 1;">
+                            </div>
+                            <div class="col-12 col-md-4 d-none d-md-block"></div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12 col-md-8 mt-3 mb-3">
+                                <label class="form-label">Descripción</label>
+                                <textarea class="form-control form-control-sm" name="descripcion" rows="3">{{ form.descripcion.value|default_if_none:'' }}</textarea>
+                                {% for error in form.descripcion.errors %}
+                                    <small class="text-danger d-block">{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary px-4" id="btnGuardar">
+                                Guardar
+                            </button>
+                            <a id="btnCancelarEdicion" href="{% url 'obra_list' %}" class="btn btn-outline-secondary px-4">
+                                Cancelar
+                            </a>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('obraForm');
+    const inicio = document.getElementById('fecha_inicio');
+    const fin = document.getElementById('fecha_fin_estimada');
+
+    form.addEventListener('submit', function (e) {
+        if (inicio.value && fin.value) {
+            if (inicio.value >= fin.value) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error de Fechas',
+                    text: 'La fecha de fin debe ser posterior a la fecha de inicio',
+                    confirmButtonText: 'Entendido'
+                });
+                return false;
+            }
+        }
+    });
+
+    {% if form.codigo.errors %}
+        Swal.fire({
+            icon: 'error',
+            title: 'Error al ingresar Código',
+            text: '{{ form.codigo.errors.0|escapejs }}',
+            confirmButtonText: 'Entendido'
+        });
+    {% endif %}
+
+
+    const djangoMessages = [
+        {% for message in messages %}
+            { level: '{{ message.tags|default:"info" }}', text: '{{ message|escapejs }}' }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
+    if (typeof showDjangoMessages === 'function') {
+        showDjangoMessages(djangoMessages, {
+            timer: 2000,
+            toast: false,
+            position: 'center',
+            showConfirmButton: false
+        });
+    }
+
+    if (typeof attachNoChangeSweetAlert === 'function') {
+        attachNoChangeSweetAlert({
+            form: '#obraForm',
+            onNoChange: () => {
+                window.location.href = "{% url 'obra_list' %}";
+            }
+        });
+    }
+
+    const cancelObra = document.querySelector('#btnCancelarEdicion[href]');
+    if (cancelObra && typeof Swal !== 'undefined') {
+        cancelObra.addEventListener('click', (ev) => {
+            ev.preventDefault();
+            Swal.fire({
+                icon: 'question',
+                title: '¿Seguro que no quieres crear una Obra?',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, salir',
+                cancelButtonText: 'Seguir editando'
+            }).then(result => {
+                if (result.isConfirmed) {
+                    window.location.href = cancelObra.href;
+                }
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

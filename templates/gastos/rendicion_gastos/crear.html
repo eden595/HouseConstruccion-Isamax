@@ -1,0 +1,229 @@
+{% extends "partials/layouts/main.html" %}
+{% load static %}
+
+{% include "partials/main.html" %}
+
+{% block meta %}
+  {% with title="Rendición de Gastos - Ingresar gasto" %}
+    {% include "partials/title-meta.html" %}
+  {% endwith %}
+{% endblock %}
+
+{% block css %}
+<style>
+/* Height rule removed to use form-control-sm */
+#form-gasto .gasto-grid {display:grid !important;grid-template-columns:repeat(3, minmax(0, 1fr));gap:1rem;margin:0 !important;}
+#form-gasto .gasto-grid > div {width:100% !important;min-width:0;max-width:100%;}
+@media (max-width: 1199.98px) {#form-gasto .gasto-grid {grid-template-columns:repeat(2, minmax(0, 1fr));}}
+@media (max-width: 991.98px) {#form-gasto .gasto-grid {grid-template-columns:repeat(2, minmax(0, 1fr));}}
+@media (max-width: 767.98px) {#form-gasto .gasto-grid {grid-template-columns:1fr;}}
+</style>
+
+{% endblock %}
+  {% block content %}
+<div class="container-fluid">
+    {% with title_sub="Rendición de gastos" title="Ingresar gasto" %}
+  {% include "partials/pagetitle.html" %}
+
+{% endwith %}
+
+
+
+<div class="card">
+  <div class="card-body">
+    <form id="form-gasto" method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      {{ form.estado }}
+      {{ form.sin_foto.as_hidden }}
+
+      <div class="row g-3 align-items-start gasto-grid">
+        <div class="col-12 col-lg-4">
+          <label class="form-label">Creado por</label>
+          <input type="text" class="form-control form-control-sm" value="{{ request.user.get_full_name|default:request.user.username }}" readonly>
+        </div>
+        <div class="col-12 col-lg-4">
+          <label class="form-label">Fecha creación</label>
+          {{ form.fecha_creacion }}
+        </div>
+        <div class="col-12 col-lg-4">
+          <label class="form-label">Proveedor</label>
+          {{ form.proveedor }}
+        </div>
+        <div class="col-12 col-lg-4">
+          <label class="form-label">Obra</label>
+          {{ form.obra }}
+        </div>
+        <div class="col-12 col-lg-4">
+          <label class="form-label">Categoría Gasto</label>
+          {{ form.categoria }}
+        </div>
+        <div class="col-12 col-lg-4">
+          <label class="form-label">Monto (CLP)</label>
+          {{ form.monto }}
+        </div>
+        <div class="col-12 col-lg-4">
+          <label class="form-label">Tipo Documento</label>
+          {{ form.tipo_documento }}
+        </div>
+        <div class="col-12 col-lg-4">
+          <label class="form-label d-flex align-items-center justify-content-between">
+            <span>Fotografía del documento</span>
+          </label>
+          <div class="d-flex align-items-center gap-3 flex-wrap">
+            {{ form.foto }}
+            <div id="previewWrapper" class="position-relative" style="display:none;width:140px;height:110px;border:1px solid #2e3548;border-radius:10px;overflow:hidden;background:#0f1625;">
+              <img id="previewImg" src="" alt="Previsualización" style="width:100%;height:100%;object-fit:cover;">
+              <button type="button" id="btnBorrarFoto" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1 rounded-circle" style="width:32px;height:32px;padding:0;display:flex;align-items:center;justify-content:center;" title="Eliminar fotografía">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          </div>
+          <div class="small text-muted mt-1" id="fotoStatus">Sin fotografía</div>
+        </div>
+      </div>
+      <div class="d-flex gap-2 mt-4 stack-sm">
+        <button type="submit" class="btn btn-primary px-4">Guardar</button>
+        <a href="{% url 'admin_gasto_lista' %}" class="btn btn-outline-secondary px-4" id="cancelar-gasto">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</div>
+</div>
+
+{% endblock %}
+
+{% block js %}
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+  const formGasto = document.getElementById('form-gasto');
+  const montoInput = document.querySelector('#form-gasto [name="monto"]');
+  const MIN_MONTO = 1;
+  const normalizeMonto = () => {
+    if (!montoInput) return '';
+    const raw = (montoInput.value || '').toString().trim();
+    if (!raw) {
+      montoInput.value = '';
+      return '';
+    }
+    const lastDot = raw.lastIndexOf('.');
+    const lastComma = raw.lastIndexOf(',');
+    const decIndex = Math.max(lastDot, lastComma);
+    const intPart = decIndex > -1 ? raw.slice(0, decIndex) : raw;
+    const digits = intPart.replace(/[.,\s]/g, '');
+    if (!digits) {
+      montoInput.value = '';
+      return '';
+    }
+    let num = parseInt(digits, 10);
+    if (!Number.isFinite(num)) {
+      montoInput.value = '';
+      return '';
+    }
+    montoInput.value = String(num);
+    return String(num);
+  };
+  if (montoInput) {
+    montoInput.type = 'text';
+    montoInput.removeAttribute('min');
+    montoInput.removeAttribute('step');
+    montoInput.setAttribute('inputmode', 'numeric');
+    montoInput.setAttribute('pattern', '[0-9]*');
+    // Normaliza al cargar para quitar decimales/puntos iniciales
+    normalizeMonto(false);
+  }
+  const validateMontoPositive = () => {
+    if (!montoInput) return true;
+    const numeric = parseInt((montoInput.value || '').replace(/\D/g, ''), 10);
+    if (Number.isFinite(numeric) && numeric > 0) return true;
+    const showError = () => {
+      if (typeof Swal !== 'undefined') {
+        Swal.fire({
+          icon: 'error',
+          title: 'Monto inválido',
+          text: 'No se pueden ingresar montos iguales o menores a 0',
+          confirmButtonColor: '#ff7a18'
+        });
+      } else {
+        alert('No se pueden ingresar montos iguales o menores a 0');
+      }
+    };
+    showError();
+    return false;
+  };
+
+  if (formGasto && montoInput) {
+    formGasto.addEventListener('submit', (event) => {
+      const clean = normalizeMonto(false);
+      montoInput.value = clean || '';
+      if (!validateMontoPositive()) {
+        event.preventDefault();
+      }
+    });
+  }
+
+  const sinFotoChk = document.getElementById('id_sin_foto');
+  const fotoInput = document.getElementById('foto');
+  const previewWrapper = document.getElementById('previewWrapper');
+  const previewImg = document.getElementById('previewImg');
+  const fotoStatus = document.getElementById('fotoStatus');
+  const btnBorrarFoto = document.getElementById('btnBorrarFoto');
+  if (sinFotoChk) sinFotoChk.type = 'hidden';
+  
+  const setPreview = (src) => {
+    if (!previewWrapper || !previewImg) return;
+    if (src) {
+      previewImg.src = src;
+      previewWrapper.style.display = 'flex';
+      if (fotoStatus) fotoStatus.textContent = 'Con fotograf\u00eda';
+      if (sinFotoChk) sinFotoChk.value = '';
+    } else {
+      previewImg.src = '';
+      previewWrapper.style.display = 'none';
+      if (fotoStatus) fotoStatus.textContent = 'Sin fotograf\u00eda';
+      if (sinFotoChk) sinFotoChk.value = 'on';
+    }
+  };
+  if (sinFotoChk) {
+    sinFotoChk.type = 'hidden';
+  }
+  if (fotoInput) {
+    fotoInput.addEventListener('change', () => {
+      if (!fotoInput.files || !fotoInput.files.length) {
+        setPreview('');
+        return;
+      }
+      const readerPrev = new FileReader();
+      readerPrev.onload = e => setPreview(e.target.result);
+      readerPrev.onerror = () => setPreview('');
+      readerPrev.readAsDataURL(fotoInput.files[0]);
+    });
+  }
+  if (btnBorrarFoto) {
+    btnBorrarFoto.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (fotoInput) fotoInput.value = '';
+      setPreview('');
+    });
+  }
+
+  const cancelLink = document.getElementById('cancelar-gasto');
+  if (cancelLink && !cancelLink.dataset.bound) {
+    cancelLink.dataset.bound = '1';
+    cancelLink.addEventListener('click', (ev) => {
+      ev.preventDefault();
+      Swal.fire({
+        icon: 'question',
+        title: '¿Seguro que no quieres crear un Gasto?',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, salir',
+        cancelButtonText: 'Seguir editando'
+      }).then(res => { if (res.isConfirmed) window.location.href = cancelLink.href; });
+    });
+  }
+});
+</script>
+
+{% endblock %}

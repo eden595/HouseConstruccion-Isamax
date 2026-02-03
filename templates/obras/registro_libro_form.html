@@ -1,0 +1,1160 @@
+{% extends "partials/layouts/main.html" %}
+{% load i18n l10n %}
+{% block title %}{{ title }}{% endblock %}
+{% block css %}{% endblock %}
+{% block content %}
+
+<div class="container-fluid">
+    {% with title_sub="Libro de Obras" title=registro|yesno:"Editar Registro,Ingresar Registro" breadcrumb_parent="Libro de Obras" %}
+        {% include "partials/pagetitle.html" %}
+    {% endwith %}
+    
+    <div class="row justify-content-center">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data" id="registroForm">
+                        {% csrf_token %}
+                        <!-- Supervisor, Obra y Fecha -->
+                        <div class="row mb-3 g-3">
+                            <div class="col-12 col-lg-4">
+                                <label class="form-label fw-semibold">Supervisor <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control form-control-sm" 
+                                    value="{{ request.user.get_full_name|default:request.user.username }}" 
+                                    readonly disabled>
+                                <small class="text-muted">Usuario logeado</small>
+                            </div>
+                            <div class="col-12 col-lg-4">
+                                <label for="obra" class="form-label fw-semibold">Obra <span class="text-danger">*</span></label>
+                                <select class="form-select form-select-sm" id="obra" name="obra" required>
+                                    <option value="">Seleccione...</option>
+                                    {% for obra in obras %}
+                                        <option value="{{ obra.id }}" 
+                                                data-fecha-inicio="{{ obra.fecha_inicio|date:'Y-m-d' }}"
+                                                data-fecha-fin="{{ obra.fecha_fin_estimada|date:'Y-m-d' }}"
+                                                {% if registro and registro.obra.id == obra.id %}selected{% endif %}>
+                                            {{ obra.codigo }} - {{ obra.nombre }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-12 col-lg-4">
+                                <label for="fecha" class="form-label fw-semibold">Fecha <span class="text-danger">*</span></label>
+                                <input
+                                    type="date"
+                                    class="form-control form-control-sm"
+                                    id="fecha"
+                                    name="fecha"
+                                    value="{% if registro %}{{ registro.fecha|date:'Y-m-d' }}{% else %}{{ today|date:'Y-m-d' }}{% endif %}"
+                                    min="{{ today|date:'Y-m-d' }}"
+                                    max="{{ today|date:'Y-m-d' }}"
+                                    required
+                                    readonly
+                                >
+                                <small class="text-danger d-none" id="errorFecha"></small>
+                                <small class="text-muted" id="infoFecha">Seleccione una obra primero</small>
+                            </div>
+                        </div>
+                        <!-- Trabajadores y Horas -->
+                        <div class="mb-3">
+                            <div id="trabajadores-container">
+                                {% for trab_reg in registro_trabajadores %}
+                                <div class="row g-2 mb-2 align-items-end trabajador-row">
+                                    <div class="col-12 col-lg-4">
+                                        <label class="form-label fw-semibold">Trabajador <span class="text-danger">*</span></label>
+                                        <select class="form-select form-select-sm" name="trabajador[]" required data-current="{{ trab_reg.trabajador.id }}">
+                                            <option value="">Seleccione...</option>
+                                            {% for trabajador in trabajadores %}
+                                                {% if trabajador.id != request.user.id %}
+                                                    <option value="{{ trabajador.id }}" {% if trab_reg.trabajador.id == trabajador.id %}selected{% endif %}>{{ trabajador.get_full_name|default:trabajador.username }}</option>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-12 col-lg-4">
+                                        <div class="d-flex gap-2">
+                                            <div class="flex-grow-1">
+                                                <label class="form-label fw-semibold small mb-1">Horas trabajadas <span class="text-danger">*</span></label>
+                                                <div class="horas-wrapper form-control form-control-sm p-0">
+                                                <input type="number" class="form-control form-control-sm horas-input text-center" name="horas[]" 
+                                                    value="{{ trab_reg.horas_trabajadas|unlocalize }}" 
+                                                    step="0.5" min="1" max="12" required placeholder="Horas trabajadas">
+                                                    <div class="horas-spinner" aria-hidden="true">
+                                                        <button type="button" class="btn btn-horas btn-horas-up" data-direction="up" data-target="horas" tabindex="-1">
+                                                            <i class="ri-arrow-up-s-line"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-horas btn-horas-down" data-direction="down" data-target="horas" tabindex="-1">
+                                                            <i class="ri-arrow-down-s-line"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <label class="form-label fw-semibold small mb-1">Horas extra <span class="text-danger">*</span></label>
+                                                <div class="horas-wrapper form-control form-control-sm p-0">
+                                                    <input type="number" class="form-control form-control-sm horas-input text-center" name="horas_extra[]" 
+                                                        value="{{ trab_reg.horas_extras|default_if_none:0|unlocalize }}" 
+                                                        step="0.5" min="0" max="12" required placeholder="Horas extra">
+                                                    <div class="horas-spinner" aria-hidden="true">
+                                                        <button type="button" class="btn btn-horas btn-horas-up" data-direction="up" data-target="horas_extra" tabindex="-1">
+                                                            <i class="ri-arrow-up-s-line"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-horas btn-horas-down" data-direction="down" data-target="horas_extra" tabindex="-1">
+                                                            <i class="ri-arrow-down-s-line"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-lg-4 d-flex align-items-end">
+                                        <button type="button" class="btn btn-danger btn-sm w-100 remove-trabajador">
+                                            <i class="ri-delete-bin-line"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <div class="row g-2 mb-2 align-items-end trabajador-row">
+                                    <div class="col-12 col-lg-4">
+                                        <label class="form-label fw-semibold">Trabajador <span class="text-danger">*</span></label>
+                                        <select class="form-select form-select-sm" name="trabajador[]" required data-current="">
+                                            <option value="">Seleccione...</option>
+                                            {% for trabajador in trabajadores %}
+                                                {% if trabajador.id != request.user.id %}
+                                                    <option value="{{ trabajador.id }}">{{ trabajador.get_full_name|default:trabajador.username }}</option>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-12 col-lg-4">
+                                        <div class="d-flex gap-2">
+                                            <div class="flex-grow-1">
+                                                <label class="form-label fw-semibold small mb-1">Horas trabajadas <span class="text-danger">*</span></label>
+                                                <div class="horas-wrapper form-control form-control-sm p-0">
+                                                    <input type="number" class="form-control form-control-sm horas-input text-center" name="horas[]" 
+                                                        placeholder="Horas trabajadas" step="0.5" min="1" max="12" required>
+                                                    <div class="horas-spinner" aria-hidden="true">
+                                                        <button type="button" class="btn btn-horas btn-horas-up" data-direction="up" data-target="horas" tabindex="-1">
+                                                            <i class="ri-arrow-up-s-line"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-horas btn-horas-down" data-direction="down" data-target="horas" tabindex="-1">
+                                                            <i class="ri-arrow-down-s-line"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <label class="form-label fw-semibold small mb-1">Horas extra <span class="text-danger">*</span></label>
+                                                <div class="horas-wrapper form-control form-control-sm p-0">
+                                                    <input type="number" class="form-control form-control-sm horas-input text-center" name="horas_extra[]" 
+                                                        placeholder="Horas extra" step="0.5" min="0" max="12" required>
+                                                    <div class="horas-spinner" aria-hidden="true">
+                                                        <button type="button" class="btn btn-horas btn-horas-up" data-direction="up" data-target="horas_extra" tabindex="-1">
+                                                            <i class="ri-arrow-up-s-line"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-horas btn-horas-down" data-direction="down" data-target="horas_extra" tabindex="-1">
+                                                            <i class="ri-arrow-down-s-line"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-lg-4 d-flex align-items-end">
+                                        <button type="button" class="btn btn-danger btn-sm w-100 remove-trabajador">
+                                            <i class="ri-delete-bin-line"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <button type="button" class="btn btn-secondary btn-sm mt-2" id="btn-agregar-trabajador">
+                                <i class="ri-add-line me-1"></i>Agregar Trabajador
+                            </button>
+                        </div>
+
+                        <!-- Tareas Realizadas -->
+                        <div class="row mb-3 px-0">
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Tareas Realizadas <span class="text-danger">*</span></label>
+                                <div id="tareas-container">
+                                {% if registro.tareas.all %}
+                                    {% for tarea in registro.tareas.all %}
+                                    <div class="row g-2 mb-2 trabajador-row align-items-center">
+                                        <div class="col-12 col-lg-4">
+                                            <input type="text" class="form-control form-control-sm" name="tarea[]" 
+                                                value="{{ tarea.descripcion }}" required maxlength="300">
+                                        </div>
+                                        <div class="col-12 col-lg-4 d-flex">
+                                            <button type="button" class="btn btn-danger btn-sm w-auto px-3 remove-tarea">
+                                                <i class="ri-delete-bin-line"></i>
+                                            </button>
+                                        </div>
+                                        <div class="col-lg-4 d-none d-lg-block"></div>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="row g-2 mb-2 trabajador-row align-items-center">
+                                        <div class="col-12 col-lg-4">
+                                            <input type="text" class="form-control form-control-sm" name="tarea[]" 
+                                                placeholder="Descripción de la tarea" required maxlength="300">
+                                        </div>
+                                        <div class="col-12 col-lg-4 d-flex">
+                                            <button type="button" class="btn btn-danger btn-sm w-auto px-3 remove-tarea">
+                                                <i class="ri-delete-bin-line"></i>
+                                            </button>
+                                        </div>
+                                        <div class="col-lg-4 d-none d-lg-block"></div>
+                                    </div>
+                                {% endif %}
+                                </div>
+                                <button type="button" class="btn btn-secondary btn-sm mt-2" id="btn-agregar-tarea">
+                                    <i class="ri-add-line me-1"></i>Agregar Tarea
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Observaciones y Fotografías/Videos -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-12 col-lg-4">
+                                <label class="form-label fw-semibold">Fotografías/Videos <span class="text-danger"></span></label>
+                                <input type="file" class="form-control form-control-sm" id="archivos-input" name="archivos[]" 
+                                    accept="image/*,video/*" multiple onchange="previsualizarArchivos(event)">
+                                <small class="text-muted">Máximo 10MB por archivo - Formatos: JPG, PNG, MP4, MOV</small>
+                                <div id="previews" class="d-flex flex-wrap gap-2 mt-3"></div>
+                                <input type="hidden" name="deleted_ids" id="deleted_ids" value="">
+                                {% if registro %}
+                                <div class="mt-3">
+                                    <div class="d-flex flex-wrap gap-2">
+                                        {% for foto in registro.fotografias.all %}
+                                        <div class="position-relative" style="width:150px;height:150px;border:2px solid var(--bs-border-color);border-radius:8px;overflow:hidden;">
+                                            {% if foto.tipo == 'imagen' %}
+                                                <img src="{{ foto.archivo.url }}" class="w-100 h-100" style="object-fit:cover;">
+                                            {% else %}
+                                                <video src="{{ foto.archivo.url }}" controls class="w-100 h-100" style="object-fit:cover;"></video>
+                                            {% endif %}
+                                            <button type="button" 
+                                            class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1 rounded-circle btn-delete-file"
+                                            data-id="{{ foto.pk }}"
+                                            style="width:30px;height:30px;padding:0;display:flex;align-items:center;justify-content:center;">
+                                                <i class="ri-delete-bin-line"></i>
+                                            </button>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-12 col-lg-8">
+                                <label for="observaciones" class="form-label fw-semibold">Observaciones <span class="text-danger"></span></label>
+                                <textarea class="form-control form-control-sm" id="observaciones" name="observaciones" 
+                                        rows="5" maxlength="1000" 
+                                        placeholder="Observaciones adicionales (opcional)">{{ registro.observaciones|default:'' }}</textarea>
+                                <small class="text-muted">Máximo 1000 caracteres</small>
+                            </div>
+                        </div>
+
+                        <!-- Botones -->
+                        <div class="d-flex flex-column flex-sm-row gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary" id="btnGuardar">
+                                <span id="btnText">
+                                    <i class="ri-save-line align-middle"></i> Guardar
+                                </span>
+                                <span id="btnLoading" class="d-none">
+                                    <span class="spinner-border spinner-border-sm me-1"></span>Guardando...
+                                </span>
+                            </button>
+                            <a href="{% url 'registro_libro_list' %}" class="btn btn-outline-secondary" id="btnCancelarEdicion">
+                                <i class="ri-close-line align-middle"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block js %}
+  <script>
+  const MAX_TOTAL_HORAS = 12;
+  const MAX_FILE_SIZE = 10 * 1024 * 1024;
+  const SUPERVISOR_ID = "{{ request.user.id }}";
+  const TODAY_STR = "{{ today|date:'Y-m-d' }}";
+
+function validarFechaRegistro() {
+    const obraSelect = document.getElementById('obra');
+    const fechaInput = document.getElementById('fecha');
+    const errorFecha = document.getElementById('errorFecha');
+    const infoFecha = document.getElementById('infoFecha');
+    const btnGuardar = document.getElementById('btnGuardar');
+
+    errorFecha.classList.add('d-none');
+    infoFecha.classList.remove('d-none');
+    fechaInput.classList.remove('is-invalid');
+    btnGuardar.disabled = false;
+
+    if (!obraSelect.value || !fechaInput.value) {
+        return true;
+    }
+
+    const selectedOption = obraSelect.options[obraSelect.selectedIndex];
+    const fechaInicioObra = new Date(selectedOption.dataset.fechaInicio);
+    const fechaFinObra = new Date(selectedOption.dataset.fechaFin);
+    const fechaRegistro = new Date(TODAY_STR);
+
+    let error = null;
+
+    if (fechaRegistro < fechaInicioObra) {
+        const fechaFormateada = formatearFecha(selectedOption.dataset.fechaInicio);
+        error = `La fecha debe ser igual o posterior al inicio de la obra (${fechaFormateada})`;
+    }
+    else if (fechaRegistro > fechaFinObra) {
+        const fechaFormateada = formatearFecha(selectedOption.dataset.fechaFin);
+        error = `La fecha debe ser igual o anterior al fin estimado de la obra (${fechaFormateada})`;
+    }
+
+    if (error) {
+        errorFecha.textContent = error;
+        errorFecha.classList.remove('d-none');
+        infoFecha.classList.add('d-none');
+        fechaInput.classList.add('is-invalid');
+        btnGuardar.disabled = true;
+        return false;
+    }
+
+    const fechaInicioStr = formatearFecha(selectedOption.dataset.fechaInicio);
+    const fechaFinStr = formatearFecha(selectedOption.dataset.fechaFin);
+    infoFecha.textContent = `Fecha fija: ${formatearFecha(TODAY_STR)}`;
+    infoFecha.classList.remove('text-success');
+    infoFecha.classList.add('text-muted');
+
+    return true;
+}
+
+function formatearFecha(fechaISO) {
+    const partes = fechaISO.split('-');
+    return `${partes[2]}/${partes[1]}/${partes[0]}`;
+}
+
+function actualizarRangoFechas() {
+    const obraSelect = document.getElementById('obra');
+    const fechaInput = document.getElementById('fecha');
+    const infoFecha = document.getElementById('infoFecha');
+
+    if (!obraSelect.value) {
+        fechaInput.min = TODAY_STR;
+        fechaInput.max = TODAY_STR;
+        fechaInput.value = TODAY_STR;
+        infoFecha.textContent = 'Seleccione una obra primero';
+        infoFecha.classList.remove('text-success');
+        infoFecha.classList.add('text-muted');
+        return;
+    }
+
+    const selectedOption = obraSelect.options[obraSelect.selectedIndex];
+    const fechaInicioObra = selectedOption.dataset.fechaInicio;
+    const fechaFinObra = selectedOption.dataset.fechaFin;
+
+    fechaInput.min = TODAY_STR;
+    fechaInput.max = TODAY_STR;
+    fechaInput.value = TODAY_STR;
+
+    const fechaInicioStr = formatearFecha(fechaInicioObra);
+    const fechaFinStr = formatearFecha(fechaFinObra);
+    infoFecha.textContent = `Fecha fija: ${formatearFecha(TODAY_STR)}`;
+    infoFecha.classList.add('text-muted');
+
+    if (fechaInput.value) {
+        validarFechaRegistro();
+    }
+}
+
+const TRABAJADORES = [
+    {% for trabajador in trabajadores %}
+    {% if trabajador.id != request.user.id %}
+    { id: "{{ trabajador.id }}", nombre: "{{ trabajador.get_full_name|default:trabajador.username }}" }{% if not forloop.last %},{% endif %}
+    {% endif %}
+    {% endfor %}
+];
+
+function buildOptions(currentId, usedIds) {
+    let html = '<option value=\"\">Seleccione...</option>';
+    const currentItem = TRABAJADORES.find(t => String(t.id) === String(currentId));
+    const available = TRABAJADORES.filter(t => !usedIds.includes(String(t.id)) || String(t.id) === String(currentId));
+    available.forEach(t => {
+        const selected = String(t.id) === String(currentId) ? 'selected' : '';
+        html += `<option value=\"${t.id}\" ${selected}>${t.nombre}</option>`;
+    });
+    if (currentId && !currentItem) {
+        html = `<option value=\"${currentId}\" selected>${currentId}</option>` + html;
+    }
+    return html;
+}
+
+function getTrabajadoresSeleccionados() {
+    return Array.from(document.querySelectorAll('#trabajadores-container select[name=\"trabajador[]\"]'))
+        .map(sel => sel.value || sel.dataset.current || '')
+        .filter(Boolean);
+}
+
+function actualizarEstadoAgregarTrabajador() {
+    const btn = document.getElementById('btn-agregar-trabajador');
+    if (!btn) return;
+    const seleccionados = new Set(getTrabajadoresSeleccionados());
+    const disponibles = TRABAJADORES.filter(t => !seleccionados.has(String(t.id)));
+    btn.disabled = disponibles.length === 0;
+    btn.title = disponibles.length === 0 ? 'No hay más trabajadores disponibles.' : '';
+}
+
+function agregarTarea() {
+    const container = document.getElementById('tareas-container');
+    const div = document.createElement('div');
+    div.className = 'row g-2 mb-2 trabajador-row align-items-center';
+    div.innerHTML = `
+        <div class="col-12 col-lg-4">
+            <input type="text" class="form-control form-control-sm" name="tarea[]" 
+                placeholder="Descripción de la tarea" required maxlength="300">
+        </div>
+        <div class="col-12 col-lg-4 d-flex">
+            <button type="button" class="btn btn-danger btn-sm w-auto px-3 remove-tarea">
+                <i class="ri-delete-bin-line"></i>
+            </button>
+        </div>
+        <div class="col-lg-4 d-none d-lg-block"></div>
+    `;
+    container.appendChild(div);
+}
+
+function trabajadorRowTemplate() {
+    return `
+    <div class="row g-2 mb-2 align-items-end trabajador-row">
+        <div class="col-12 col-md-4">
+            <select class="form-select form-select-sm" name="trabajador[]" required></select>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="d-flex gap-2">
+                <div class="flex-grow-1">
+                    <label class="form-label fw-semibold small mb-1">Horas trabajadas <span class="text-danger">*</span></label>
+                    <div class="horas-wrapper form-control form-control-sm p-0">
+                        <input type="number" class="form-control form-control-sm horas-input text-center" name="horas[]" 
+                            placeholder="Horas trabajadas" step="0.5" min="1" max="12" required>
+                        <div class="horas-spinner" aria-hidden="true">
+                            <button type="button" class="btn btn-horas btn-horas-up" data-direction="up" data-target="horas" tabindex="-1">
+                                <i class="ri-arrow-up-s-line"></i>
+                            </button>
+                            <button type="button" class="btn btn-horas btn-horas-down" data-direction="down" data-target="horas" tabindex="-1">
+                                <i class="ri-arrow-down-s-line"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex-grow-1">
+                    <label class="form-label fw-semibold small mb-1">Horas extra <span class="text-danger">*</span></label>
+                    <div class="horas-wrapper form-control form-control-sm p-0">
+                        <input type="number" class="form-control form-control-sm horas-input text-center" name="horas_extra[]" 
+                            placeholder="Horas extra" step="0.5" min="0" max="12" required>
+                        <div class="horas-spinner" aria-hidden="true">
+                            <button type="button" class="btn btn-horas btn-horas-up" data-direction="up" data-target="horas_extra" tabindex="-1">
+                                <i class="ri-arrow-up-s-line"></i>
+                            </button>
+                            <button type="button" class="btn btn-horas btn-horas-down" data-direction="down" data-target="horas_extra" tabindex="-1">
+                                <i class="ri-arrow-down-s-line"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4 d-flex align-items-end">
+            <button type="button" class="btn btn-danger btn-sm w-100 remove-trabajador">
+                <i class="ri-delete-bin-line"></i>
+            </button>
+        </div>
+    </div>`;
+
+}
+
+function agregarTrabajador() {
+    const disponibles = TRABAJADORES.filter(
+        t => !getTrabajadoresSeleccionados().includes(String(t.id))
+    );
+    if (!disponibles.length) {
+        Swal.fire({
+            icon: 'info',
+            title: 'Información',
+            text: 'No hay más trabajadores disponibles.',
+            confirmButtonColor: '#000',
+            confirmButtonText: 'Entendido'
+        });
+        return;
+    }
+    const container = document.getElementById('trabajadores-container');
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = trabajadorRowTemplate();
+    const row = wrapper.firstElementChild;
+    container.appendChild(row);
+    hookTrabajadorSelects();
+    actualizarOpcionesTrabajadores();
+    clampAllHoras();
+    const select = row.querySelector('select[name=\"trabajador[]\"]');
+    if (select) select.focus();
+}
+
+function getStepPrecision(step) {
+    const stepStr = step.toString();
+    const decimalIndex = stepStr.indexOf('.');
+    return decimalIndex >= 0 ? stepStr.length - decimalIndex - 1 : 0;
+}
+
+function clampHorasRow(row, changedInput) {
+    if (!row) return;
+    const horasInput = row.querySelector('input[name="horas[]"]');
+    const extraInput = row.querySelector('input[name="horas_extra[]"]');
+    if (!horasInput || !extraInput) return;
+
+    const step = parseFloat(horasInput.step) || 0.5;
+    const precision = getStepPrecision(step);
+
+    const parseVal = (inp) => {
+        let val = parseFloat(inp.value);
+        if (Number.isNaN(val) || val < 0) val = 0;
+        if (val > MAX_TOTAL_HORAS) val = MAX_TOTAL_HORAS;
+        return val;
+    };
+
+    let horasVal = parseVal(horasInput);
+    let extraVal = parseVal(extraInput);
+
+    if (horasVal >= MAX_TOTAL_HORAS) {
+        horasVal = MAX_TOTAL_HORAS;
+        extraVal = 0;
+        extraInput.disabled = true;
+    } else {
+        extraInput.disabled = false;
+        if (horasVal + extraVal > MAX_TOTAL_HORAS) {
+            if (changedInput === extraInput) {
+                extraVal = Math.max(0, MAX_TOTAL_HORAS - horasVal);
+            } else {
+                horasVal = Math.max(0, MAX_TOTAL_HORAS - extraVal);
+            }
+        }
+    }
+
+    const fmt = (v) => v.toFixed(precision).replace(/\.0+$/, '').replace(/(\.\d*[1-9])0+$/, '$1');
+    horasInput.value = fmt(horasVal);
+    extraInput.value = fmt(extraVal);
+}
+
+function clampAllHoras() {
+    document.querySelectorAll('#trabajadores-container .trabajador-row').forEach(row => clampHorasRow(row));
+}
+
+function actualizarEstadoAgregarTrabajador() {
+    const btn = document.getElementById('btn-agregar-trabajador');
+    if (!btn) return;
+    
+    
+    const actuales = getTrabajadoresSeleccionados();
+    const disponibles = TRABAJADORES.filter(t => !actuales.includes(String(t.id)));
+    
+    if (disponibles.length === 0) {
+        btn.disabled = true;
+    } else {
+        btn.disabled = false;
+    }
+}
+
+function validarTrabajadoresUnicos(changedSelect) {
+    const selects = Array.from(document.querySelectorAll('#trabajadores-container select[name=\"trabajador[]\"]'));
+    const seen = new Set();
+    for (const sel of selects) {
+        const val = sel.value;
+        if (!val) continue;
+        if (SUPERVISOR_ID && val === SUPERVISOR_ID) {
+            sel.value = '';
+            return false;
+        }
+        if (seen.has(val)) {
+            if (changedSelect) changedSelect.value = '';
+            return false;
+        }
+        seen.add(val);
+    }
+    actualizarOpcionesTrabajadores();
+    return true;
+}
+
+function hookTrabajadorSelects() {
+    document.querySelectorAll('#trabajadores-container select[name=\"trabajador[]\"]').forEach(sel => {
+        if (!sel.dataset.dupListener) {
+            sel.addEventListener('change', (e) => validarTrabajadoresUnicos(e.target));
+            sel.dataset.dupListener = '1';
+        }
+        if (!sel.value) {
+            const selects = Array.from(document.querySelectorAll('#trabajadores-container select[name=\"trabajador[]\"]'));
+            const selectedIds = selects.map(s => s.value).filter(Boolean);
+            const used = selectedIds.filter(id => id && id !== sel.value);
+            sel.innerHTML = buildOptions(sel.dataset.current || sel.value, used);
+            if (sel.dataset.current) sel.value = sel.dataset.current;
+        }
+    });
+}
+
+function actualizarOpcionesTrabajadores() {
+    const selects = Array.from(document.querySelectorAll('#trabajadores-container select[name=\"trabajador[]\"]'));
+    const selectedIds = selects.map(s => s.value || s.dataset.current || '').filter(Boolean);
+    selects.forEach(sel => {
+        const current = sel.value || sel.dataset.current || '';
+        const used = selectedIds.filter(id => id && id !== current);
+        sel.innerHTML = buildOptions(current, used);
+        if (current) sel.value = current;
+        sel.dataset.current = sel.value || '';
+    });
+    hookTrabajadorSelects();
+    actualizarEstadoAgregarTrabajador();
+}
+
+function cambiarHoras(button) {
+    const wrapper = button.closest('.horas-wrapper');
+    const target = button.dataset.target === 'horas_extra' ? wrapper?.querySelector('input[name="horas_extra[]"]') : wrapper?.querySelector('input[name="horas[]"]');
+    if (!target) return;
+    const step = parseFloat(target.step) || 1;
+    const precision = getStepPrecision(step);
+    let value = parseFloat(target.value);
+    if (Number.isNaN(value)) value = 0;
+    value += button.dataset.direction === 'down' ? -step : step;
+    target.value = value.toFixed(precision).replace(/\.0+$/, '').replace(/(\.\d*[1-9])0+$/, '$1');
+    clampHorasRow(button.closest('.trabajador-row'), target);
+    target.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.remove-tarea')) {
+        const container = document.getElementById('tareas-container');
+        const row = e.target.closest('.row');
+        if (container.querySelectorAll('.row').length > 1) {
+            row.remove();
+        } else {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Atención',
+                text: 'Debe haber al menos una tarea',
+                confirmButtonColor: '#000',
+                confirmButtonText: 'Entendido'
+            });
+        }
+    }
+
+    if (e.target.closest('.remove-trabajador')) {
+        const container = document.getElementById('trabajadores-container');
+        const row = e.target.closest('.trabajador-row');
+
+        if (container.querySelectorAll('.trabajador-row').length > 1) {
+            row.remove();
+            actualizarOpcionesTrabajadores();
+        } else {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Atención',
+                text: 'Debe haber al menos un trabajador',
+                confirmButtonColor: '#000',
+                confirmButtonText: 'Entendido'
+            });
+        }
+    }
+
+    const horasBtn = e.target.closest('.btn-horas');
+    if (horasBtn) {
+        e.preventDefault();
+        cambiarHoras(horasBtn);
+    }
+
+    const deleteFileBtn = e.target.closest('.btn-delete-file');
+    if (deleteFileBtn) {
+        e.preventDefault();
+        const id = deleteFileBtn.dataset.id;
+        Swal.fire({
+            title: '¿Eliminar fotografía?',
+            text: "Se eliminará definitivamente.",
+            icon: 'warning',
+            position: 'center',
+            heightAuto: false,
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Agregar ID a input hidden
+                const input = document.getElementById('deleted_ids');
+                if (input) {
+                    const current = input.value ? input.value.split(',') : [];
+                    current.push(id);
+                    input.value = current.join(',');
+                }
+                
+                // Remover elemento visual
+                const wrapper = deleteFileBtn.closest('.position-relative');
+                if (wrapper) wrapper.remove();
+
+                // Mostrar alerta de éxito
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Archivo eliminado',
+                    text: 'El archivo ha sido eliminado exitosamente.',
+                    position: 'center',
+                    heightAuto: false,
+                    toast: false,
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+            }
+        });
+    }
+
+});
+
+document.addEventListener('blur', function(e) {
+    if (e.target.matches('input[name="horas[]"], input[name="horas_extra[]"]')) {
+        clampHorasRow(e.target.closest('.trabajador-row'), e.target);
+    }
+}, true);
+
+document.addEventListener('change', function(e) {
+    if (e.target.matches('input[name="horas[]"], input[name="horas_extra[]"]')) {
+        clampHorasRow(e.target.closest('.trabajador-row'), e.target);
+    }
+    if (e.target.matches('#trabajadores-container select[name="trabajador[]"]')) {
+        validarTrabajadoresUnicos(e.target);
+    }
+});
+
+let archivosSeleccionados = [];
+
+function previsualizarArchivos(event) {
+    const files = Array.from(event.target.files);
+    const container = document.getElementById('previews');
+
+    files.forEach(file => {
+        if (file.size > 10*1024*1024) {
+            alert(`El archivo ${file.name} excede 10MB`);
+            return;
+        }
+
+        if (!file.type.match(/image.*/) && !file.type.match(/video.*/)) {
+            alert(`El archivo ${file.name} no es válido`);
+            return;
+        }
+
+        archivosSeleccionados.push(file);
+
+        const reader = new FileReader();
+        const div = document.createElement('div');
+        div.className = 'position-relative';
+        div.style.cssText = 'width:150px;height:150px;border:2px solid var(--bs-border-color);border-radius:8px;overflow:hidden;';
+
+        const btnRemove = document.createElement('button');
+        btnRemove.type = 'button';
+        btnRemove.className = 'btn btn-danger btn-sm position-absolute top-0 end-0 m-1 rounded-circle';
+        btnRemove.innerHTML = '<i class="ri-delete-bin-line"></i>';
+        btnRemove.style.cssText = 'width:30px;height:30px;padding:0;display:flex;align-items:center;justify-content:center;';
+        btnRemove.onclick = function() {
+            const idx = archivosSeleccionados.indexOf(file);
+            if (idx > -1) archivosSeleccionados.splice(idx, 1);
+            div.remove();
+            actualizarInputArchivos();
+        };
+
+        reader.onload = function(e) {
+            if (file.type.startsWith('image/')) {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.className = 'w-100 h-100';
+                img.style.objectFit = 'cover';
+                div.appendChild(img);
+            } else if (file.type.startsWith('video/')) {
+                const video = document.createElement('video');
+                video.src = e.target.result;
+                video.controls = true;
+                video.className = 'w-100 h-100';
+                video.style.objectFit = 'cover';
+                div.appendChild(video);
+            }
+            div.appendChild(btnRemove);
+            container.appendChild(div);
+        };
+
+        reader.readAsDataURL(file);
+    });
+
+    actualizarInputArchivos();
+}
+
+function validateMinHoras() {
+    const normalInputs = document.querySelectorAll('#registroForm input[name="horas[]"]');
+    const extraInputs = document.querySelectorAll('#registroForm input[name="horas_extra[]"]');
+    let valid = true;
+
+    const getValue = (input, fallback = 0) => {
+        const raw = input.value.trim();
+        if (!raw) {
+            return fallback;
+        }
+        const parsed = parseFloat(raw.replace(',', '.'));
+        return Number.isFinite(parsed) ? parsed : NaN;
+    };
+
+    normalInputs.forEach(input => {
+        const value = getValue(input, 0);
+        if (Number.isNaN(value) || value < 1) {
+            valid = false;
+            input.classList.add('is-invalid');
+        } else {
+            input.classList.remove('is-invalid');
+        }
+    });
+
+    extraInputs.forEach(input => {
+        const value = getValue(input, 0);
+        if (Number.isNaN(value) || value < 0) {
+            valid = false;
+            input.classList.add('is-invalid');
+        } else {
+            input.classList.remove('is-invalid');
+        }
+    });
+
+    if (!valid) {
+        const message = 'Las horas normales deben ser al menos 1 y las horas extra no pueden ser negativas.';
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Horas inválidas',
+                text: message,
+                position: 'center',
+                showConfirmButton: true,
+                confirmButtonColor: '#ff7a18'
+            });
+        } else {
+            alert(message);
+        }
+    }
+    return valid;
+}
+
+function actualizarInputArchivos() {
+    const input = document.getElementById('archivos-input');
+    const dt = new DataTransfer();
+    archivosSeleccionados.forEach(file => dt.items.add(file));
+    input.files = dt.files;
+}
+
+document.getElementById('registroForm').addEventListener('submit', function(e) {
+    if (!validateMinHoras()) {
+        e.preventDefault();
+        return false;
+    }
+    if (!validarFechaRegistro()) {
+        e.preventDefault();
+        alert('Por favor, corrija los errores en la fecha antes de guardar.');
+        return false;
+    }
+
+    const btnText = document.getElementById('btnText');
+    const btnLoading = document.getElementById('btnLoading');
+    const btnGuardar = document.getElementById('btnGuardar');
+
+    btnText.classList.add('d-none');
+    btnLoading.classList.remove('d-none');
+    btnGuardar.disabled = true;
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+
+    const btnTarea = document.getElementById('btn-agregar-tarea');
+    const btnTrabajador = document.getElementById('btn-agregar-trabajador');
+
+    const djangoMessages = [
+      {% for message in messages %}
+      { level: '{{ message.tags|default:"info" }}', text: '{{ message|escapejs }}' }{% if not forloop.last %},{% endif %}
+      {% endfor %}
+    ];
+
+    if (djangoMessages.length && typeof Swal !== 'undefined') {
+        const last = djangoMessages[djangoMessages.length - 1];
+        const lvl = (last.level || '').toLowerCase();
+        const icon = lvl.includes('success') ? 'success' : lvl.includes('error') ? 'error' : lvl.includes('warning') ? 'warning' : 'info';
+        
+        let title = last.text || 'Registro de obra ha sido actualizado correctamente.';
+        let text = lvl.includes('info') ? 'No modificaste ningún dato.' : undefined;
+        let timer = 1800;
+        
+        if (last.text === 'Archivo eliminado exitosamente') {
+            title = 'Archivo eliminado';
+            text = 'El archivo ha sido eliminado exitosamente.';
+            timer = 2000;
+        }
+
+        Swal.fire({
+            icon,
+            title,
+            text,
+            position: 'center',
+            heightAuto: false,
+            toast: false,
+            showConfirmButton: false,
+            timer: timer
+        });
+    }
+
+    const registroForm = document.getElementById('registroForm');
+    let formInitial = null;
+    if (registroForm) {
+        const snapshot = () => {
+            const fd = new FormData(registroForm);
+            const obj = {};
+            fd.forEach((v,k) => { if (k !== 'csrfmiddlewaretoken') obj[k] = v instanceof File ? v.name : String(v); });
+            return obj;
+        };
+        registroForm.addEventListener('submit', (ev) => {
+            const current = snapshot();
+            const keys = new Set([...Object.keys(formInitial), ...Object.keys(current)]);
+            let changed = false;
+            keys.forEach(k => { if ((formInitial[k]||'') !== (current[k]||'')) changed = true; });
+            if (!changed) {
+                ev.preventDefault();
+                Swal.fire({
+                    icon: 'info',
+                    title: 'No se realizaron cambios.',
+                    text: 'No modificaste ningún dato.',
+                    position: 'center',
+                    toast: false,
+                    showConfirmButton: false,
+                    timer: 1800
+                }).then(() => { window.location.href = "{% url 'registro_libro_list' %}"; });
+                return;
+            }
+        });
+    }
+
+    if (btnTarea) btnTarea.addEventListener('click', agregarTarea);
+    if (btnTrabajador) btnTrabajador.addEventListener('click', agregarTrabajador);
+
+
+
+    const obraSelect = document.getElementById('obra');
+    const fechaInput = document.getElementById('fecha');
+    if (obraSelect) obraSelect.addEventListener('change', actualizarRangoFechas);
+    if (fechaInput) {
+        fechaInput.addEventListener('change', validarFechaRegistro);
+        fechaInput.addEventListener('blur', validarFechaRegistro);
+    }
+    if (fechaInput && !fechaInput.value) {
+        fechaInput.value = TODAY_STR;
+    }
+    if (obraSelect && obraSelect.value) actualizarRangoFechas();
+    if (obraSelect && obraSelect.value && fechaInput && fechaInput.value) validarFechaRegistro();
+
+    hookTrabajadorSelects();
+    actualizarOpcionesTrabajadores();
+    hookTrabajadorSelects();
+    actualizarOpcionesTrabajadores();
+    clampAllHoras();
+
+    if (registroForm && typeof snapshot === 'undefined') {
+        const snapshot = () => {
+             const fd = new FormData(registroForm);
+             const obj = {};
+             fd.forEach((v,k) => { if (k !== 'csrfmiddlewaretoken') obj[k] = v instanceof File ? v.name : String(v); });
+             return obj;
+        };
+        setTimeout(() => { formInitial = snapshot(); }, 100);
+    } else if (registroForm) {
+         setTimeout(() => { 
+             const snapshot = () => {
+                 const fd = new FormData(registroForm);
+                 const obj = {};
+                 fd.forEach((v,k) => { if (k !== 'csrfmiddlewaretoken') obj[k] = v instanceof File ? v.name : String(v); });
+                 return obj;
+             };
+             formInitial = snapshot(); 
+         }, 100);
+    }
+
+    const btnCancelar = document.getElementById('btnCancelarEdicion');
+    if (btnCancelar) {
+        btnCancelar.addEventListener('click', (e) => {
+            const destino = btnCancelar.getAttribute('href') || "{% url 'registro_libro_list' %}";
+            const goOut = () => { window.location.href = destino; };
+            if (typeof Swal === 'undefined') {
+                if (!confirm('¿Estás seguro que quieres cancelar?')) {
+                    e.preventDefault();
+                }
+                return;
+            }
+            e.preventDefault();
+            Swal.fire({
+                icon: 'question',
+                title: '¿Seguro que no quieres crear un Registro?',
+                background: '#0f1625',
+                color: '#e5e7ec',
+                iconColor: '#6366f1',
+                width: '34em',
+                padding: '28px 30px',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, salir',
+                cancelButtonText: 'Seguir editando',
+                confirmButtonColor: '#16a34a',
+                cancelButtonColor: '#0f1625',
+                buttonsStyling: false,
+                customClass: {
+                    popup: 'swal-dark',
+                    confirmButton: 'btn btn-success fw-bold px-4',
+                    cancelButton: 'btn btn-outline-light fw-semibold px-4'
+                }
+            }).then(result => {
+                if (result.isConfirmed) goOut();
+            });
+        });
+    }
+});
+</script>
+
+<style>
+/* Estilos removidos para usar form-control-sm estándar */
+#registroForm textarea.form-control {
+    min-height: 80px;
+    font-size: 0.9rem;
+}
+#registroForm .form-label {
+    font-size: 14.5px;
+    font-weight: 500;
+}
+#registroForm small {
+    font-size: 13px;
+}
+
+#btn-agregar-tarea,
+#btn-agregar-trabajador {
+    height: 30px;
+    padding: 16px 16px;
+    font-size: 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 16px;
+}
+
+#registroForm .btn-danger {
+    height: 40px !important;
+    width: 40px !important;
+    padding: 0 !important;
+    font-size: 14px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+
+.horas-wrapper {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    height: 30px;
+    overflow: hidden;
+}
+
+html:not([data-bs-theme="dark"]) .horas-wrapper {
+    background-color: #fff !important;
+}
+
+.horas-input {
+    color: var(--bs-body-color);
+    border: none;
+    font-weight: 600;
+    font-size: 13px;
+    text-align: left;
+    padding: 0 10px;
+    -moz-appearance: textfield;
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    border-radius: 0;
+    background: transparent; /* Transparent to show wrapper bg */
+}
+
+.horas-input:focus {
+    color: var(--bs-body-color);
+    border: none;
+    box-shadow: none;
+    background: transparent;
+}
+
+.horas-input::-webkit-inner-spin-button,
+.horas-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.horas-spinner {
+    width: 26px;
+    height: 30px;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bs-form-control-bg, var(--bs-body-bg));
+    border-left: 1px solid var(--bs-border-color);
+    border-radius: 0 8px 8px 0;
+}
+
+.btn-horas {
+    flex: 1;
+    height: 15px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background-color: var(--bs-form-control-bg, var(--bs-body-bg));
+    color: var(--bs-body-color);
+    font-size: 11px;
+    line-height: 1;
+}
+.btn-horas i {
+    font-size: 10px;
+    line-height: 1;
+}
+
+/* Separator removed */
+
+.btn-horas:hover,
+.btn-horas:focus {
+    /* Subtle hover effect */
+    background-color: rgba(var(--bs-emphasis-color-rgb), 0.05);
+    color: var(--bs-body-color);
+    box-shadow: none;
+}
+
+.btn-horas:active {
+    background-color: rgba(var(--bs-emphasis-color-rgb), 0.1);
+    color: var(--bs-body-color);
+}
+
+.btn-horas:focus-visible {
+    outline: none;
+    box-shadow: none;
+    color: var(--bs-body-color);
+}
+/* Force SweetAlert2 centering */
+div.swal2-container {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+div.swal2-popup {
+    margin: auto !important;
+}
+</style>
+{% endblock %}

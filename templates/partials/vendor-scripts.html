@@ -1,0 +1,51 @@
+﻿{% load static %}
+
+<!-- JAVASCRIPT LIBRARIES VIA CDN -->
+<!-- 1. jQuery (Crucial for DataTables and many plugins) -->
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+
+<!-- 2. Core Template Scripts -->
+<script src="/static/assets/libs/swiper/swiper-bundle.min.js"></script>
+<script src="/static/assets/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="/static/assets/libs/simplebar/simplebar.js"></script>
+<script src="/static/assets/js/scroll-top.init.js"></script>
+<script src="{% static 'assets/js/layout-setup.js' %}"></script>
+
+<!-- 3. DataTables & Extensions (CDN) -->
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
+
+<!-- 4. SweetAlert2 (CDN) -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- SweetAlert helper -->
+<script src="{% static 'assets/js/swal-messages.js' %}"></script>
+<script src="{% static 'assets/js/no-change-alert.js' %}"></script>
+
+<!-- ⚡ DATATABLES SIN TRANSICIONES - CARGA GLOBAL -->
+<script src="{% static 'assets/js/datatables-no-transitions.js' %}"></script>
+
+<!-- ⚡ FORZAR SIN TRANSICIONES FINAL -->
+<script>
+(function() {
+    'use strict';
+    
+    function forceNoTransitions() {
+        const all = document.querySelectorAll('*');
+        all.forEach(function(el) {
+            if (el && el.style) {
+                el.style.transition = 'none';
+                el.style.animation = 'none';
+            }
+        });
+    }
+    
+    forceNoTransitions();
+    setTimeout(forceNoTransitions, 10);
+    setTimeout(forceNoTransitions, 50);
+    setTimeout(forceNoTransitions, 100);
+})();
+</script>
+
+

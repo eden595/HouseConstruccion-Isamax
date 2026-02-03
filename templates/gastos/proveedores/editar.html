@@ -1,0 +1,140 @@
+{% extends "partials/layouts/main.html" %}
+{% load static %}
+
+{% include "partials/main.html" %}
+
+{% block meta %}
+{% with title="Editar Proveedor" %}
+{% include "partials/title-meta.html" %}
+{% endwith %}
+{% endblock %}
+
+{% block content %}
+{% with title_sub="Administrador" title="Editar proveedor" breadcrumb_parent="Proveedores"%}
+{% include "partials/pagetitle.html" %}
+{% endwith %}
+
+    <div class="card">
+  <div class="card-body">
+    <form id="proveedorForm" method="post" novalidate data-edit-mode="1">
+      {% csrf_token %}
+      <div class="row g-3 align-items-start">
+        <div class="col-md-6 col-lg-3 shrink-col">
+          <label class="form-label">Proveedor <span class="text-danger">*</span></label>
+          <input type="text" name="nombre" class="form-control form-control-sm" value="{{ proveedor.nombre }}" readonly>
+        </div>
+        <div class="col-md-6 col-lg-3 shrink-col">
+          <label class="form-label">RUT <span class="text-danger">*</span></label>
+          <input type="text" name="rut" class="form-control form-control-sm" value="{{ proveedor.rut }}" readonly>
+        </div>
+        <div class="col-md-6 col-lg-3 shrink-col">
+          <label class="form-label">Dirección <span class="text-danger">*</span></label>
+          {{ form.direccion }}
+          {% for error in form.direccion.errors %}
+            <small class="text-danger d-block">{{ error }}</small>
+          {% endfor %}
+        </div>
+        <div class="col-md-6 col-lg-3 shrink-col">
+          <label class="form-label">Teléfono <span class="text-danger">*</span></label>
+          {{ form.telefono }}
+          {% for error in form.telefono.errors %}
+            <small class="text-danger d-block">{{ error }}</small>
+          {% endfor %}
+        </div>
+        <div class="col-md-4 col-lg-3 shrink-col">
+          <label class="form-label">Creado por</label>
+          <input type="text" class="form-control form-control-sm" value="{{ proveedor.creado_por|default:'-' }}" readonly>
+        </div>
+        <div class="col-md-4 col-lg-3 shrink-col">
+          <label class="form-label">Fecha creación</label>
+          <input type="date" name="fecha_creacion" class="form-control form-control-sm"
+            value="{{ proveedor.fecha_creacion|date:'Y-m-d' }}" readonly>
+        </div>
+      </div>
+      <div class="d-flex gap-2 mt-4">
+        <button type="submit" class="btn btn-primary px-4">Guardar cambios</button>
+        <a href="{% url 'admin_proveedores' %}" class="btn btn-outline-secondary px-4"
+          id="proveedorCancelar">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  if (typeof attachNoChangeSweetAlert === 'function') {
+    attachNoChangeSweetAlert({
+      form: '#proveedorForm',
+      onNoChange: () => {
+        window.location.href = "{% url 'admin_proveedores' %}";
+      }
+    });
+  }
+
+  const cancel = document.getElementById('proveedorCancelar');
+  if (cancel) {
+    cancel.addEventListener('click', (ev) => {
+      ev.preventDefault();
+      if (typeof Swal === 'undefined') {
+        if (confirm('¿Quieres salir sin guardar los cambios?')) {
+          window.location.href = cancel.href;
+        }
+        return;
+      }
+      Swal.fire({
+        icon: 'question',
+        title: '¿Estás seguro que quieres cancelar?',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, salir',
+        cancelButtonText: 'Seguir editando'
+      }).then(res => {
+        if (res.isConfirmed) window.location.href = cancel.href;
+      });
+    });
+  }
+
+  {% if form.errors %}
+    {% if form.errors|length == 1 and form.nombre.errors %}
+      Swal.fire({
+          icon: 'error',
+          title: 'Error en el Nombre',
+          text: '{{ form.nombre.errors.0|escapejs }}',
+          confirmButtonText: 'Entendido'
+      });
+    {% elif form.errors|length == 1 and form.rut.errors %}
+      Swal.fire({
+          icon: 'error',
+          title: 'Error en el RUT',
+          text: '{{ form.rut.errors.0|escapejs }}',
+          confirmButtonText: 'Entendido'
+      });
+    {% elif form.errors|length == 1 and form.direccion.errors %}
+      Swal.fire({
+          icon: 'error',
+          title: 'Error en la Dirección',
+          text: '{{ form.direccion.errors.0|escapejs }}',
+          confirmButtonText: 'Entendido'
+      });
+    {% elif form.errors|length == 1 and form.telefono.errors %}
+      Swal.fire({
+          icon: 'error',
+          title: 'Error en el Teléfono',
+          text: '{{ form.telefono.errors.0|escapejs }}',
+          confirmButtonText: 'Entendido'
+      });
+    {% else %}
+      Swal.fire({
+        icon: 'error',
+        title: 'Error de validación',
+        text: 'Existe un error en el formulario ({{ form.errors|length }} errores). Por favor revisa los campos en rojo.',
+        confirmButtonText: 'Entendido'
+      });
+    {% endif %}
+  {% endif %}
+
+});
+</script>
+{% endblock %}

@@ -1,0 +1,264 @@
+{% extends "partials/layouts/main.html" %}
+{% load static %}
+
+{% include "partials/main.html" %}
+
+{% block meta %}
+    {% with title="Administrar Obras" %}
+        {% include "partials/title-meta.html" %}
+    {% endwith %}
+{% endblock %}
+
+{% block css %}
+    <link href="{% static 'css/jquery.dataTables.min.css' %}" rel="stylesheet" />
+    <link href="{% static 'css/responsive.dataTables.min.css' %}" rel="stylesheet" />
+    <style>
+        .table td,
+        .table th {
+            padding: 0.5rem 0.75rem;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+        @media (max-width: 768px) {
+            .table { font-size: 0.9rem; }
+            .btn, .form-control, .form-select { font-size: 0.9rem; }
+        }
+        @media (max-width: 480px) {
+            .table { font-size: 0.85rem; }
+        }
+        .status-badge { padding: 6px 12px; min-width: 80px; text-align: center; }
+        .table-responsive { overflow-x: auto; }
+        #btnNuevaObra {
+            position: relative;
+            z-index: 999;
+            pointer-events: auto;
+        }
+    </style>
+{% endblock css %}
+
+{% block content %}
+    {% with title_sub="Obras" title="Administrar Obras" %}
+        {% include "partials/pagetitle.html" %}
+    {% endwith %}
+
+    <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3 mb-3">
+        <a id="btnNuevaObra"
+           class="btn btn-success text-nowrap px-3"
+           href="{% url 'obra_create' %}"
+           onclick="event.preventDefault(); window.location.href=this.href; return false;">
+            <i class="bi bi-plus-lg me-1"></i> Nueva Obra
+        </a>
+        <div class="d-flex align-items-center gap-2" style="max-width: 320px; width: 100%;">
+            <label for="searchObra" class="mb-0 small text-muted">Buscar:</label>
+            <input
+                type="text"
+                id="searchObra"
+                name="q"
+                class="form-control form-control-sm"
+                placeholder="Codigo, obra o ciudad"
+                style="max-width: 220px;"
+            >
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+
+            <div class="d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center gap-2 mb-3">
+                <label class="mb-0 small text-muted">Mostrar</label>
+                <select id="customLength" class="form-select form-select-sm w-100 w-sm-auto" style="max-width: 140px;" aria-label="Cantidad de registros a mostrar">
+                    <option value="10" selected>10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="-1">Todos</option>
+                </select>
+                <span class="small text-muted">registros</span>
+            </div>
+
+            <div class="table-responsive">
+                <table id="table_obras" class="table align-middle table-striped mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Codigo</th>
+                            <th scope="col">Obra</th>
+                            <th scope="col">Ciudad</th>
+                            <th scope="col">Estado Obra</th>
+                            <th scope="col">Fecha Inicio</th>
+                            <th scope="col">Fecha Fin Est.</th>
+                            <th scope="col">Activo</th>
+                            <th scope="col">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for obra in obras %}
+                        <tr data-obra-row="{{ obra.id }}">
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ obra.codigo }}</td>
+                            <td>{{ obra.nombre }}</td>
+                            <td>{{ obra.ciudad.nombre }}</td>
+                            <td>{{ obra.estado_obra.nombre }}</td>
+                            <td data-order="{{ obra.fecha_inicio|date:'Y-m-d' }}">{{ obra.fecha_inicio|date:"d/m/Y" }}</td>
+                            <td data-order="{{ obra.fecha_fin_estimada|date:'Y-m-d' }}">{{ obra.fecha_fin_estimada|date:"d/m/Y" }}</td>
+                            <td class="status-cell">
+                                {% if obra.estado %}
+                                    <span class="badge bg-success status-badge">Activo</span>
+                                {% else %}
+                                    <span class="badge bg-secondary status-badge">Inactivo</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="d-flex gap-2 align-items-center">
+                                    <a class="btn btn-sm btn-action-edit" href="{% url 'obra_update' obra.id %}">Editar</a>
+                                    <form method="post"
+                                            action="{% url 'obra_toggle_estado' obra.id %}"
+                                            class="d-inline toggle-form"
+                                            data-active="{% if obra.estado %}1{% else %}0{% endif %}">
+                                        {% csrf_token %}
+                                        {% if obra.estado %}
+                                            <button type="submit" class="btn btn-sm btn-action-inactive toggle-btn">Desactivar</button>
+                                        {% else %}
+                                            <button type="submit" class="btn btn-sm btn-action-active toggle-btn">Activar</button>
+                                        {% endif %}
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script type="application/javascript">
+        const table = new DataTable('#table_obras', {
+            language: {
+                url: "{% static 'json/es-CL.json' %}",
+                emptyTable: 'No hay obras registradas',
+            },
+            dom: 'rtip',
+            columnDefs: [
+                { searchable: false, targets: [0, 7, 8] },
+                { orderable: false, targets: [0, 8] }
+            ],
+            order: [[1, 'asc']],
+        });
+
+        // Refuerzo mínimo: click en "Nueva Obra" redirige al formulario de creación
+        (function() {
+            const btn = document.getElementById('btnNuevaObra');
+            if (!btn) return;
+            const target = btn.getAttribute('href');
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (target) {
+                    window.location.href = target;
+                }
+            });
+        })();
+
+        const searchInput = document.getElementById('searchObra');
+        if (searchInput) {
+            searchInput.addEventListener('keyup', () => {
+                table.search(searchInput.value.trim()).draw();
+            });
+        }
+
+        const lengthSelect = document.getElementById('customLength');
+        if (lengthSelect) {
+            lengthSelect.addEventListener('change', () => {
+                const len = parseInt(lengthSelect.value, 10);
+                table.page.len(len).draw();
+            });
+        }
+
+        const adjustTable = () => {
+            table.columns.adjust();
+        };
+        window.addEventListener('resize', adjustTable);
+        setTimeout(adjustTable, 100);
+
+        // Mensajes tipo SweetAlert centrados (igual que usuarios)
+        const djangoMessages = [
+          {% for message in messages %}
+          { level: '{{ message.tags|default:"info" }}', text: '{{ message|escapejs }}' }{% if not forloop.last %},{% endif %}
+          {% endfor %}
+        ];
+        if (djangoMessages.length && typeof Swal !== 'undefined') {
+            const last = djangoMessages[djangoMessages.length - 1];
+            const lvl = (last.level || '').toLowerCase();
+            const icon = lvl.includes('success') ? 'success' : lvl.includes('error') ? 'error' : lvl.includes('warning') ? 'warning' : 'info';
+            const defaultText = lvl.includes('info') ? 'No modificaste ningún dato.' : undefined;
+            let title = last.text || 'Información';
+            if (lvl.includes('success')) {
+                title = 'Lista de Obras ha sido actualizada correctamente.';
+            }
+            Swal.fire({
+                icon,
+                title,
+                text: defaultText,
+                position: 'center',
+                toast: false,
+                showConfirmButton: false,
+                timer: 1800
+            });
+        }
+
+        // Toggle activar/desactivar con SweetAlert y actualización en tabla
+        document.querySelectorAll('.toggle-form').forEach(form => {
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = form.querySelector('.toggle-btn');
+                const badge = form.closest('tr')?.querySelector('.status-badge');
+                const csrf = form.querySelector('input[name="csrfmiddlewaretoken"]')?.value;
+                if (!btn || !badge || !csrf) return form.submit();
+                btn.disabled = true;
+                try {
+                    const res = await fetch(form.action, {
+                        method: 'POST',
+                        headers: { 'X-CSRFToken': csrf, 'X-Requested-With': 'XMLHttpRequest' }
+                    });
+                    if (!res.ok) throw new Error('Error al actualizar');
+                    const data = await res.json();
+                    if (!data.success) throw new Error(data.message || 'No se pudo actualizar');
+                    const activeNow = data.estado === true;
+                    form.dataset.active = activeNow ? '1' : '0';
+                    badge.textContent = activeNow ? 'Activo' : 'Inactivo';
+                    badge.classList.toggle('bg-success', activeNow);
+                    badge.classList.toggle('bg-secondary', !activeNow);
+                    btn.textContent = activeNow ? 'Desactivar' : 'Activar';
+                    btn.classList.toggle('btn-action-inactive', activeNow);
+                    btn.classList.toggle('btn-action-active', !activeNow);
+                    Swal.fire({
+                        icon: 'success',
+                        title: data.message || (activeNow ? 'Obra activada' : 'Obra desactivada'),
+                        timer: 1600,
+                        showConfirmButton: false,
+                        position: 'center',
+                        toast: false
+                    });
+                } catch (err) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'No se pudo actualizar',
+                        text: err.message || 'Intenta nuevamente',
+                        timer: 2000,
+                        showConfirmButton: false,
+                        position: 'center',
+                        toast: false
+                    });
+                } finally {
+                    btn.disabled = false;
+                }
+            });
+        });
+    </script>
+{% endblock js %}

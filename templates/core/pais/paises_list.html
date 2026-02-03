@@ -1,0 +1,218 @@
+{% extends "partials/layouts/main.html" %}
+{% load static %}
+
+{% include "partials/main.html" %}
+
+{% block css %}
+<link href="{% static 'css/jquery.dataTables.min.css' %}" rel="stylesheet" />
+<link href="{% static 'css/responsive.dataTables.min.css' %}" rel="stylesheet" />
+{% endblock %}
+
+{% block meta %}
+{% with title="Administrar Países" %}
+{% include "partials/title-meta.html" %}
+{% endwith %}
+{% endblock %}
+
+{% block content %}
+    {% with title_sub="Obras" title="Administrar Países" %}
+    {% include "partials/pagetitle.html" %}
+    {% endwith %}
+
+    <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3 mb-3">
+        <a href="{% url 'core:pais_create' %}" class="btn btn-success text-nowrap px-3">
+            <i class="bi bi-plus-lg me-1"></i> Nuevo País
+        </a>
+        <div class="d-flex align-items-center gap-2" style="max-width: 320px; width: 100%;">
+            <label class="mb-0 small text-muted">Buscar:</label>
+            <input type="text" id="searchPais" class="form-control form-control-sm" placeholder="País, creador..." style="max-width: 200px;" />
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+
+            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-start gap-2 mb-3">
+                <label class="mb-0 small text-muted">Mostrar</label>
+                <select id="customLengthPais" class="form-select form-select-sm" style="max-width: 140px;" aria-label="Cantidad de registros a mostrar">
+                    <option value="10" selected>10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="-1">Todos</option>
+                </select>
+                <span class="small text-muted">registros</span>
+            </div>
+
+            <div class="table-responsive">
+                <table id="table_paises" class="table align-middle table-striped mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">País</th>
+                            <th scope="col">Creador</th>
+                            <th scope="col">Estado</th>
+                            <th scope="col">Fecha Creación</th>
+                            <th scope="col">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pais in paises %}
+                        <tr>
+                            <td>{{ pais.nombre }}</td>
+                            <td>{% if pais.creado_por %}{{ pais.creado_por.get_full_name|default:pais.creado_por.username }}{% else %}-{% endif %}</td>
+                            <td>
+                                <span class="badge pill-status status-badge {% if pais.estado == 1 %}bg-success{% else %}bg-secondary{% endif %} px-3 py-2">
+                                    {{ pais.get_estado_display }}
+                                </span>
+                            </td>
+                            <td>{{ pais.fecha_creacion|date:"d/m/Y" }}</td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <a class="btn btn-sm btn-action-edit" href="{% url 'core:pais_update' pais.id %}">Editar</a>
+                                    
+                                    <form method="post" action="{% url 'core:pais_toggle_estado' pais.id %}"
+                                        class="d-inline toggle-form"
+                                        data-active="{% if pais.estado == 1 %}1{% else %}0{% endif %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-toggle toggle-btn {% if pais.estado == 1 %}btn-action-inactive{% else %}btn-action-active{% endif %}">
+                                            {% if pais.estado == 1 %}Desactivar{% else %}Activar{% endif %}
+                                        </button>
+                                    </form>
+
+
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script type="application/javascript">
+      document.addEventListener('DOMContentLoaded', () => {
+
+        const table = new DataTable('#table_paises', {
+            language: { url: '{% static 'json/es-CL.json' %}' },
+            dom: 'rtip', 
+            columnDefs: [
+                { searchable: true, targets: [0, 1] }, 
+                { searchable: false, targets: [2, 3, 4] },
+                { orderable: false, targets: [4] }
+            ]
+        });
+
+        const djangoMessages = [
+          {% for message in messages %}
+          { level: '{{ message.tags|default:"info" }}', text: '{{ message|escapejs }}' }{% if not forloop.last %},{% endif %}
+          {% endfor %}
+        ];
+        if (djangoMessages.length && window.Swal) {
+          const lastMsg = djangoMessages[djangoMessages.length - 1];
+          const icon = lastMsg.level === 'success' ? 'success' : (lastMsg.level === 'error' ? 'error' : 'info');
+          Swal.fire({ icon, title: lastMsg.text, timer: 2200, showConfirmButton: false });
+        }
+
+
+        const searchInput = document.getElementById('searchPais');
+        if (searchInput) {
+          searchInput.addEventListener('keyup', () => {
+            table.search(searchInput.value.trim()).draw();
+          });
+        }
+
+
+        const lengthSelect = document.getElementById('customLengthPais');
+        if (lengthSelect) {
+            lengthSelect.addEventListener('change', () => {
+              table.page.len(lengthSelect.value).draw();
+            });
+        }
+
+
+        document.querySelectorAll('.toggle-form').forEach(form => {
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = form.querySelector('.toggle-btn');
+                const row = form.closest('tr');
+                const badge = row.querySelector('.status-badge');
+                const csrf = form.querySelector('input[name="csrfmiddlewaretoken"]')?.value;
+
+                if (!btn || !badge || !csrf) return;
+                btn.disabled = true;
+
+                try {
+                    const res = await fetch(form.action, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrf,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                    });
+
+                    if (!res.ok) throw new Error('Error al actualizar');
+                    const data = await res.json();
+
+                    if (data.success) {
+                        const activeNow = data.estado;
+                        form.dataset.active = activeNow ? '1' : '0';
+
+                        badge.textContent = activeNow ? 'Activo' : 'Inactivo';
+                        badge.classList.toggle('bg-success', activeNow);
+                        badge.classList.toggle('bg-secondary', !activeNow);
+
+                        btn.textContent = activeNow ? 'Desactivar' : 'Activar';
+                        btn.classList.toggle('btn-action-inactive', activeNow);
+                        btn.classList.toggle('btn-action-active', !activeNow);
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: `País ${activeNow ? 'activado' : 'desactivado'}`,
+                            timer: 1200,
+                            showConfirmButton: false
+                        });
+                    } else {
+                        throw new Error(data.message || 'Error desconocido');
+                    }
+                } catch (err) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'No se pudo actualizar',
+                        text: err.message || 'Inténtalo nuevamente'
+                    });
+                } finally {
+                    btn.disabled = false;
+                }
+            });
+        });
+
+
+        document.querySelectorAll('.delete-form').forEach(form => {
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                Swal.fire({
+                    title: '¿Estás seguro?',
+                    text: "No podrás revertir esto",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Sí, eliminar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            });
+        });
+
+      });
+    </script>
+{% endblock js %}
